@@ -5,6 +5,8 @@ VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "Interactive_Graph_Visualizer", "Interactive_Graph_Visualizer\Interactive_Graph_Visualizer.pyproj", "{57538FC4-2D92-427D-97D5-F55FD20BE1A9}"
 EndProject
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "networkx-master", "networkx-master\networkx-master.pyproj", "{B33CD1F3-B164-42AC-8E50-908D92ACDD23}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -13,6 +15,8 @@ Global
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{57538FC4-2D92-427D-97D5-F55FD20BE1A9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{57538FC4-2D92-427D-97D5-F55FD20BE1A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B33CD1F3-B164-42AC-8E50-908D92ACDD23}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B33CD1F3-B164-42AC-8E50-908D92ACDD23}.Release|Any CPU.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

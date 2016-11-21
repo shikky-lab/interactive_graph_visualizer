@@ -5,13 +5,15 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>57538fc4-2d92-427d-97d5-f55fd20be1a9</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>Interactive_Graph_Visualizer.py</StartupFile>
-    <SearchPath>
-    </SearchPath>
+    <StartupFile>series_act.py</StartupFile>
+    <SearchPath>..\..\MyPythonModule\;..\networkx-master\</SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
     <Name>Interactive_Graph_Visualizer</Name>
     <RootNamespace>Interactive_Graph_Visualizer</RootNamespace>
+    <IsWindowsApplication>False</IsWindowsApplication>
+    <InterpreterId>{9a7a9026-48c1-4688-9d5d-e5699d47d074}</InterpreterId>
+    <InterpreterVersion>2.7</InterpreterVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -22,7 +24,20 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="calc_HITS.py" />
+    <Compile Include="clollection_analizer2.py" />
+    <Compile Include="color_changer.py" />
+    <Compile Include="cvt_to_nxtype2.py" />
     <Compile Include="Interactive_Graph_Visualizer.py" />
+    <Compile Include="LDA_for_SS.py" />
+    <Compile Include="LDA_modify_for_graph.py" />
+    <Compile Include="LDA_PCA.py" />
+    <Compile Include="make_lch_picker.py" />
+    <Compile Include="make_network_by_nx.py" />
+    <Compile Include="series_act.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <InterpreterReference Include="{9a7a9026-48c1-4688-9d5d-e5699d47d074}\2.7" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
