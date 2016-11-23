@@ -21,6 +21,7 @@ import LDA_PCA
 import make_lch_picker
 import cv2
 from sklearn import decomposition
+import json
 
 prop = matplotlib.font_manager.FontProperties(fname=r'C:\Windows\Fonts\meiryo.ttc')#pyplotに日本語を使うために必要
 
@@ -453,6 +454,9 @@ def main(search_word,src_pkl_name,exp_name,root_dir,nx_dir,weights_pkl_name=None
 	#plt.xticks(np.linspace(0,1,9, endpoint=True))
 	plt.show()
 	plt.savefig(os.path.join(nx_dir,comp_func_name+"_graph.png"))
+
+	d=nx.readwrite.json_graph.node_link_data(G)
+	json.dump(d,open("graph.json","w"))
 
 if __name__ == "__main__":
 	search_word="iPhone"

@@ -7,16 +7,76 @@ Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "Interactive_Graph_Visualize
 EndProject
 Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "networkx-master", "networkx-master\networkx-master.pyproj", "{B33CD1F3-B164-42AC-8E50-908D92ACDD23}"
 EndProject
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "Interactive_Graph_test", "Interactive_Graph_test\Interactive_Graph_test.pyproj", "{0133EB67-2B75-410F-8F29-D27F0CEC69FC}"
+EndProject
+Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "JS_Visualizer", "http://localhost:50325", "{F530A671-ACC1-4C27-86CD-94376BA9D25F}"
+	ProjectSection(WebsiteProperties) = preProject
+		UseIISExpress = "true"
+		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.5"
+		Debug.AspNetCompiler.VirtualPath = "/localhost_50325"
+		Debug.AspNetCompiler.PhysicalPath = "JS_Visualizer\"
+		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_50325\"
+		Debug.AspNetCompiler.Updateable = "true"
+		Debug.AspNetCompiler.ForceOverwrite = "true"
+		Debug.AspNetCompiler.FixedNames = "false"
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.VirtualPath = "/localhost_50325"
+		Release.AspNetCompiler.PhysicalPath = "JS_Visualizer\"
+		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_50325\"
+		Release.AspNetCompiler.Updateable = "true"
+		Release.AspNetCompiler.ForceOverwrite = "true"
+		Release.AspNetCompiler.FixedNames = "false"
+		Release.AspNetCompiler.Debug = "False"
+		SlnRelativePath = "JS_Visualizer\"
+		DefaultWebSiteLanguage = "Visual Basic"
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
+		Debug|ARM = Debug|ARM
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
 		Release|Any CPU = Release|Any CPU
+		Release|ARM = Release|ARM
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{57538FC4-2D92-427D-97D5-F55FD20BE1A9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{57538FC4-2D92-427D-97D5-F55FD20BE1A9}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{57538FC4-2D92-427D-97D5-F55FD20BE1A9}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{57538FC4-2D92-427D-97D5-F55FD20BE1A9}.Debug|x86.ActiveCfg = Debug|Any CPU
 		{57538FC4-2D92-427D-97D5-F55FD20BE1A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{57538FC4-2D92-427D-97D5-F55FD20BE1A9}.Release|ARM.ActiveCfg = Release|Any CPU
+		{57538FC4-2D92-427D-97D5-F55FD20BE1A9}.Release|x64.ActiveCfg = Release|Any CPU
+		{57538FC4-2D92-427D-97D5-F55FD20BE1A9}.Release|x86.ActiveCfg = Release|Any CPU
 		{B33CD1F3-B164-42AC-8E50-908D92ACDD23}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B33CD1F3-B164-42AC-8E50-908D92ACDD23}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{B33CD1F3-B164-42AC-8E50-908D92ACDD23}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{B33CD1F3-B164-42AC-8E50-908D92ACDD23}.Debug|x86.ActiveCfg = Debug|Any CPU
 		{B33CD1F3-B164-42AC-8E50-908D92ACDD23}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B33CD1F3-B164-42AC-8E50-908D92ACDD23}.Release|ARM.ActiveCfg = Release|Any CPU
+		{B33CD1F3-B164-42AC-8E50-908D92ACDD23}.Release|x64.ActiveCfg = Release|Any CPU
+		{B33CD1F3-B164-42AC-8E50-908D92ACDD23}.Release|x86.ActiveCfg = Release|Any CPU
+		{0133EB67-2B75-410F-8F29-D27F0CEC69FC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0133EB67-2B75-410F-8F29-D27F0CEC69FC}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{0133EB67-2B75-410F-8F29-D27F0CEC69FC}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{0133EB67-2B75-410F-8F29-D27F0CEC69FC}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{0133EB67-2B75-410F-8F29-D27F0CEC69FC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0133EB67-2B75-410F-8F29-D27F0CEC69FC}.Release|ARM.ActiveCfg = Release|Any CPU
+		{0133EB67-2B75-410F-8F29-D27F0CEC69FC}.Release|x64.ActiveCfg = Release|Any CPU
+		{0133EB67-2B75-410F-8F29-D27F0CEC69FC}.Release|x86.ActiveCfg = Release|Any CPU
+		{F530A671-ACC1-4C27-86CD-94376BA9D25F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F530A671-ACC1-4C27-86CD-94376BA9D25F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F530A671-ACC1-4C27-86CD-94376BA9D25F}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{F530A671-ACC1-4C27-86CD-94376BA9D25F}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{F530A671-ACC1-4C27-86CD-94376BA9D25F}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{F530A671-ACC1-4C27-86CD-94376BA9D25F}.Release|Any CPU.ActiveCfg = Debug|Any CPU
+		{F530A671-ACC1-4C27-86CD-94376BA9D25F}.Release|Any CPU.Build.0 = Debug|Any CPU
+		{F530A671-ACC1-4C27-86CD-94376BA9D25F}.Release|ARM.ActiveCfg = Debug|Any CPU
+		{F530A671-ACC1-4C27-86CD-94376BA9D25F}.Release|x64.ActiveCfg = Debug|Any CPU
+		{F530A671-ACC1-4C27-86CD-94376BA9D25F}.Release|x86.ActiveCfg = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
