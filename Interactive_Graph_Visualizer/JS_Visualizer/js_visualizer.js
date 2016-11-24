@@ -7,7 +7,7 @@ var v_default_height = v_height = 1000
 
 var nodes;
 var links;
-d3.json("symple_graph.json", function (graph) {
+d3.json("graph.json", function (graph) {
     //console.log(graph);   
     nodes = graph.nodes;
     links = graph.links;
@@ -25,7 +25,10 @@ function draw(graph) {
         .attr("width", "100%")
         .attr("height", "100%")
         .attr("fill", "gray")
-        .attr("opacity",0.3);
+        .attr("opacity",0.3)
+         .style("pointer-events", "all");
+
+    var container = g.append('g');
 
     var force = d3.layout.force()
 				 .nodes(nodes)
@@ -42,20 +45,17 @@ function draw(graph) {
 				 .start();
 
     var zoom = d3.behavior.zoom()
-        //.translate([0, 0])
-        //.scale(1)
-        //.scaleExtent([1, 8])
-        .scaleExtent([0.1, 10])
-        //.size([w,h])
+        .scaleExtent([0.1, 8])
         .on("zoom", zoomed);
 
-    g.call(zoom); // delete this line to disable free zooming
+    g.attr("transform", "translate(0,0)")
+    .call(zoom); // delete this line to disable free zooming
         //.call(zoom.event);
 
     force.start(); //force レイアウトの計算を開始
     for (var i = 500; i > 0; --i) force.tick(); //ワンステップ進める
 
-    var link = g.selectAll("line")
+    var link = container.selectAll("line")
                      .data(links)
                      .enter()
                      .append("line")
@@ -63,18 +63,16 @@ function draw(graph) {
                          stroke: "#ccc",
                          "stroke-width": 1
                      })
-                    .attr("transform", function(d) { return "translate(" + d + ")"; })
                     .attr({
                         "x1": function (d) { return d.source.x },
                         "y1": function (d) { return d.source.y },
                         "x2": function (d) { return d.target.x },
                         "y2": function (d) { return d.target.y },
                     });
-    var node = g.selectAll("circle")
+    var node = container.selectAll("circle")
 				  .data(nodes)
 				  .enter()
 				  .append("circle")
-                    .attr("transform", function(d) { return "translate(" + d + ")"; })
 				  .attr({
 				      r: 20,
 				      opacity: 0.5
@@ -91,22 +89,21 @@ function draw(graph) {
 
     //force.stop(); //force レイアウトの計算を終了
 
-    //force.on("tick", function() {
-    //    link.attr({x1: function(d) { return d.source.x; },
-    //        y1: function(d) { return d.source.y; },
-    //        x2: function(d) { return d.target.x; },
-    //        y2: function(d) { return d.target.y; }});
-    //    node.attr({cx: function(d) { return d.x; },
-    //        cy: function(d) { return d.y; }});
-    //});
+    force.on("tick", function() {
+        link.attr({x1: function(d) { return d.source.x; },
+            y1: function(d) { return d.source.y; },
+            x2: function(d) { return d.target.x; },
+            y2: function(d) { return d.target.y; }});
+        node.attr({cx: function(d) { return d.x; },
+            cy: function(d) { return d.y; }});
+    });
 
 
     function zoomed() 
     {
-      //svg.style("stroke-width", 1.5 / d3.event.scale + "px");
         g.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
-        var befere_vbox_width, before_vbox_height, d_x, d_y;
 
+        //var befere_vbox_width, before_vbox_height, d_x, d_y;
         //befere_v_width = v_width
         //  before_v_height = v_height
         //  v_width = v_default_width * d3.event.scale
