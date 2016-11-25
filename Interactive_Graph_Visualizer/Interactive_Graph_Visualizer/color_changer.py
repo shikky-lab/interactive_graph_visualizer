@@ -66,6 +66,19 @@ def main():
 def nothing(x):
 	pass
 
+def cvtRGB_to_HTML(RGB_1channel):
+	R,G,B=RGB_1channel
+	R_str=unicode("%02x"%R)
+	G_str=unicode("%02x"%G)
+	B_str=unicode("%02x"%B)
+	return u"#"+R_str+G_str+B_str
+def cvtLCH_to_HTML(LCH_1channel):
+	lch_img=np.ones((2,2,3),dtype=np.float32)*LCH_1channel
+	BGR_img=cvtLCH2BGR(lch_img)
+	RGB_img=cv2.cvtColor(BGR_img,cv2.COLOR_BGR2RGB)
+	RGB_1channel=RGB_img[0,0]
+	return cvtRGB_to_HTML(RGB_1channel)
+
 def test_lch():
 	cv2.namedWindow('image')
 
@@ -89,7 +102,8 @@ def test_lch():
 		k = cv2.waitKey(1) & 0xFF
 		if k == 27:
 			break
-
+		elif k!=255:
+			print cvtLCH_to_HTML(lch[0,0])
 
 def cv_colormap():
 	img=cv2.imread("lena.jpg",1)
@@ -104,5 +118,5 @@ def cv_colormap():
 
 if __name__=="__main__":
 	#main()
-	#test_lch()
-	cv_colormap()
+	test_lch()
+	#cv_colormap()

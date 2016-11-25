@@ -81,13 +81,13 @@ if __name__ == "__main__":
 	weights_pkl_name="all_node_weights_"+comp_func_name+".gpkl"
 	draw_option={
 		"comp_func_name":comp_func_name,
-		#"weight_type":[],
+		"weight_type":[],
 		#"weight_type":["ATTR","REPUL"],
-		"weight_type":["ATTR","REPUL","HITS"],#オーソリティかハブかはsize_attrで指定
+		#"weight_type":["ATTR","REPUL","HITS"],#オーソリティかハブかはsize_attrで指定
 		"node_type":"COMP1",
 		#"node_type":"PIE",
 		"do_rescale":True,
-		"with_label":False,
+		"with_label":True,
 		"size_attr":"a_score",
 		#"size_attr":0.02,
 		#"size_attr":2000,

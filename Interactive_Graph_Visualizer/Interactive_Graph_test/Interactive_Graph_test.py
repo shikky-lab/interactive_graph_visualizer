@@ -17,6 +17,7 @@ import matplotlib.cm as cm
 import matplotlib.font_manager
 import cv2
 import json
+import codecs
 
 def main():
 	G=nx.Graph()
@@ -30,7 +31,8 @@ def main():
 	#plt.show()
 	
 	d=nx.readwrite.json_graph.node_link_data(G)
-	json.dump(d,open("graph.json","w"))
+	with codecs.open("simple_graph.json","w",encoding="utf8")as fo:
+		json.dump(d,fo,indent=4,ensure_ascii=False)
 
 if __name__=="__main__":
 	main()

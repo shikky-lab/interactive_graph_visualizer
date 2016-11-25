@@ -75,9 +75,10 @@ function draw(graph) {
 				  .append("circle")
 				  .attr({
 				      r: 20,
-				      opacity: 0.5
+				      opacity: 1
 				  })
-				  .style({ fill: "red" })
+				  //.style({ fill: "#2b0080" })
+                .style("fill", function (d) {return d.color})
                 .attr({
                     class: "node",
                     "r": 8,
@@ -89,14 +90,14 @@ function draw(graph) {
 
     //force.stop(); //force レイアウトの計算を終了
 
-    force.on("tick", function() {
-        link.attr({x1: function(d) { return d.source.x; },
-            y1: function(d) { return d.source.y; },
-            x2: function(d) { return d.target.x; },
-            y2: function(d) { return d.target.y; }});
-        node.attr({cx: function(d) { return d.x; },
-            cy: function(d) { return d.y; }});
-    });
+    //force.on("tick", function() {
+    //    link.attr({x1: function(d) { return d.source.x; },
+    //        y1: function(d) { return d.source.y; },
+    //        x2: function(d) { return d.target.x; },
+    //        y2: function(d) { return d.target.y; }});
+    //    node.attr({cx: function(d) { return d.x; },
+    //        cy: function(d) { return d.y; }});
+    //});
 
 
     function zoomed() 

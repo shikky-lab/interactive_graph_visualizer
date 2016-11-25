@@ -1,7 +1,8 @@
 ﻿var w = window.innerWidth;
 var h = window.innerHeight;
 
-var keyc = true, keys = true, keyt = true, keyr = true, keyx = true, keyd = true, keyl = true, keym = true, keyh = true, key1 = true, key2 = true, key3 = true, key0 = true
+var keyc = true, keys = true, keyr = true, keyx = true, keyd = true, keyl = true, keym = true, keyh = true, key1 = true, key2 = true, key3 = true, key0 = true
+var key_t = false;//ラベルの表示有無
 
 var focus_node = null, highlight_node = null;
 
@@ -67,15 +68,18 @@ d3.json("graph.json", function (error, graph) {
       .links(graph.links)
       .start();
 
+    
+
     var link = g.selectAll(".link")
       .data(graph.links)
       .enter().append("line")
       .attr("class", "link")
       .style("stroke-width", nominal_stroke)
-      .style("stroke", function (d) {//strokeは線色?
-          if (isNumber(d.score) && d.score >= 0) return color(d.score);
-          else return default_link_color;
-      })
+        .style("stroke", default_link_color);
+        //.attr("x1", function (d) { return d.source.x; })
+        //.attr("y1", function (d) { return d.source.y; })
+        //.attr("x2", function (d) { return d.target.x; })
+        //.attr("y2", function (d) { return d.target.y; });
 
     var node = g.selectAll(".node")
       .data(graph.nodes)
@@ -100,29 +104,30 @@ d3.json("graph.json", function (error, graph) {
 
     var circle = node.append("path")
         .attr("d", d3.svg.symbol()
-          .size(function (d) { return Math.PI * Math.pow(size(d.size) || nominal_base_node_size, 2); })
-          .type(function (d) { return d.type; }))
-      .style(tocolor, function (d) {
-          if (isNumber(d.score) && d.score >= 0) return color(d.score);
-          else return default_node_color;
-      })
-      //.attr("r", function(d) { return size(d.size)||nominal_base_node_size; })
-      .style("stroke-width", nominal_stroke)
-      .style(towhite, "white");
+            .size(function (d) { return Math.PI * Math.pow(size(d.size) || nominal_base_node_size, 2); })
+            .type(function (d) { return d.type; }))
+        .style(tocolor, function (d) {return d.color})
+        .style("stroke-width", nominal_stroke)
+      //.attr("transform", function (d) { return "translate(" + d.x + "," + d.y + ")"; })
+      //.attr("cx", function (d) { return d.x; })
+      //.attr("cy", function (d) { return d.y; })
+        .style(towhite, "white");
 
     /*テキスト関係*/
     var text = g.selectAll(".text")
-      .data(graph.nodes)
-      .enter().append("text")
-      .attr("dy", ".35em")
-      .style("font-size", nominal_text_size + "px")
+        .data(graph.nodes)
+        .enter().append("text")
+        .attr("dy", ".35em")
+        .style("font-size", nominal_text_size + "px")
+        .style("display", "none")
+        //.attr("transform", function (d) { return "translate(" + d.x + "," + d.y + ")"; });
 
     if (text_center)
         text.text(function (d) { return d.id; })
        .style("text-anchor", "middle");
     else
         text.attr("dx", function (d) { return (size(d.size) || nominal_base_node_size); })
-        .text(function (d) { return '\u2002' + d.id; });
+        .text(function (d) { return '\u2002' + d.text; });
 
     /*ノードへのマウスホバーイベント*/
     node.on("mouseover", function (d) {
@@ -230,6 +235,7 @@ d3.json("graph.json", function (error, graph) {
     //window.focus();
     d3.select(window).on("resize", resize).on("keydown", keydown);
 
+
     force.on("tick", function () {
         node.attr("transform", function (d) { return "translate(" + d.x + "," + d.y + ")"; });
         text.attr("transform", function (d) { return "translate(" + d.x + "," + d.y + ")"; });
@@ -242,6 +248,8 @@ d3.json("graph.json", function (error, graph) {
         node.attr("cx", function (d) { return d.x; })
           .attr("cy", function (d) { return d.y; });
     });
+    //force.start(); //force レイアウトの計算を開始
+    //for (var i = 500; i > 0; --i) force.tick(); //ワンステップ進める
 
     function resize() {
         var width = window.innerWidth, height = window.innerHeight;
@@ -259,7 +267,7 @@ d3.json("graph.json", function (error, graph) {
             switch (String.fromCharCode(d3.event.keyCode)) {
                 case "C": keyc = !keyc; break;
                 case "S": keys = !keys; break;
-                case "T": keyt = !keyt; break;
+                case "T": key_t = !key_t; break;
                 case "R": keyr = !keyr; break;
                 case "X": keyx = !keyx; break;
                 case "D": keyd = !keyd; break;
@@ -281,7 +289,7 @@ d3.json("graph.json", function (error, graph) {
                 return (key0 || hasConnections(d)) && vis_by_type(d.type) && vis_by_node_score(d.score) ? "inline" : "none";
             });
             text.style("display", function (d) {
-                return (key0 || hasConnections(d)) && vis_by_type(d.type) && vis_by_node_score(d.score) ? "inline" : "none";
+                return (key_t? "inline" : "none");
             });
 
             if (highlight_node !== null) {
@@ -291,17 +299,15 @@ d3.json("graph.json", function (error, graph) {
                 }
                 else { exit_highlight(); }
             }
-
         }
     }
-
 });
 
 function vis_by_type(type) {
     switch (type) {
         case "circle": return keyc;
         case "square": return keys;
-        case "triangle-up": return keyt;
+        case "triangle-up": return key_t;
         case "diamond": return keyr;
         case "cross": return keyx;
         case "triangle-down": return keyd;

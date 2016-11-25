@@ -22,6 +22,7 @@ import make_lch_picker
 import cv2
 from sklearn import decomposition
 import json
+import codecs
 
 prop = matplotlib.font_manager.FontProperties(fname=r'C:\Windows\Fonts\meiryo.ttc')#pyplotに日本語を使うために必要
 
@@ -249,6 +250,7 @@ def draw_node_with_lch(G,pos,lda,size,comp_type="COMP1",lumine=255,color_map_by=
 		node_color=["#FFFFFF"]*len(G.node)
 	size_array=size.values()
 	nx.draw_networkx_nodes(G,pos=pos,node_color=node_color,node_size=size_array,pick_func=pick_function);
+	return color_map
 
 """トピック分布から色を1色決定し，lchの形で返す"""
 def theta_to_lch(theta_d,h_values,comp_type="COMP1",l=100):
@@ -296,11 +298,16 @@ def draw_network(G,pos,size,option="REPR",lda=None,dpi=100,with_label=True,lumin
 		draw_node_with_pie(G,pos,lda,size)
 		#draw_axis(xstep=0.2,ystep=0.2)#なぜか上処理で軸が消えてしまうため書き直す
 	elif option=="REPR2" or option=="COMP1" or option=="COMP2":
-		draw_node_with_lch(G,pos,lda,size,comp_type=option,lumine=lumine,color_map_by=color_map_by,cmap=cmap)
+		color_map=draw_node_with_lch(G,pos,lda,size,comp_type=option,lumine=lumine,color_map_by=color_map_by,cmap=cmap)
+
 
 	nx.draw_networkx_edges(G,pos)
 	if with_label==True:
-		nx.draw_networkx_labels(G,pos,font_size=int(12*100/dpi))
+		if color_map is not None:
+			nx.draw_networkx_labels(G,pos,labels=color_map,font_size=int(12*100/dpi))
+		else:
+			nx.draw_networkx_labels(G,pos,font_size=int(12*100/dpi))
+	return color_map
 
 """オプションを読みやすい形式で保存.前処理をしてから渡す"""
 def save_drawoption(param_dict,path):
@@ -445,7 +452,7 @@ def main(search_word,src_pkl_name,exp_name,root_dir,nx_dir,weights_pkl_name=None
 
 	"""実際の描画処理"""
 	size_dict=calc_nodesize(G,attr=size_attr,min_size=1000,max_size=3000)
-	draw_network(G,pos,size=size_dict,option=node_type,lda=lda,dpi=dpi,with_label=with_label,lumine=lumine,color_map_by=color_map_by,cmap=cmap)
+	new_color_map=draw_network(G,pos,size=size_dict,option=node_type,lda=lda,dpi=dpi,with_label=with_label,lumine=lumine,color_map_by=color_map_by,cmap=cmap)
 	#plt.savefig(os.path.join(nx_process_dir,unicode(i)+"_graph.png"))
 
 	path=os.path.join(nx_dir,'graph.dot')
@@ -455,8 +462,12 @@ def main(search_word,src_pkl_name,exp_name,root_dir,nx_dir,weights_pkl_name=None
 	plt.show()
 	plt.savefig(os.path.join(nx_dir,comp_func_name+"_graph.png"))
 
+	"""ネットワークの再保存"""
+	if new_color_map is not None:#カラーマップの更新
+		nx.set_node_attributes(G,"color",new_color_map)
 	d=nx.readwrite.json_graph.node_link_data(G)
-	json.dump(d,open("graph.json","w"))
+	with codecs.open("graph.json","w",encoding="utf8")as fo:
+		json.dump(d,fo,indent=4,ensure_ascii=False)
 
 if __name__ == "__main__":
 	search_word="iPhone"
