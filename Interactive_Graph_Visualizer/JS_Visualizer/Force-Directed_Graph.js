@@ -66,9 +66,8 @@ d3.json("graph.json", function (error, graph) {
     force
       .nodes(graph.nodes)
       .links(graph.links)
+        .linkDistance(function(d){return d.weight*20})
       .start();
-
-    
 
     var link = g.selectAll(".link")
       .data(graph.links)
@@ -234,7 +233,6 @@ d3.json("graph.json", function (error, graph) {
     resize();
     //window.focus();
     d3.select(window).on("resize", resize).on("keydown", keydown);
-
 
     force.on("tick", function () {
         node.attr("transform", function (d) { return "translate(" + d.x + "," + d.y + ")"; });

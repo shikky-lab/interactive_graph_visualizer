@@ -6248,6 +6248,8 @@
         return !quad.charge;
       };
     }
+
+/*d3.jsオリジナル．無名関数をやめたら動かなくなったので渋々コメントアウトで対応*/
     force.tick = function() {
       if ((alpha *= .99) < .005) {
         timer = null;
@@ -6258,14 +6260,17 @@
         return true;
       }
       var n = nodes.length, m = links.length, q, i, o, s, t, l, k, x, y;
-      for (i = 0; i < m; ++i) {
-        o = links[i];
-        s = o.source;
-        t = o.target;
+      for (i = 0; i < m; ++i) {//mはリンクの個数
+        o = links[i];//リンクオブジェクト
+        s = o.source;//ソースノード
+        t = o.target;//ターゲットノード
         x = t.x - s.x;
         y = t.y - s.y;
-        if (l = x * x + y * y) {
-          l = alpha * strengths[i] * ((l = Math.sqrt(l)) - distances[i]) / l;
+        if (l = x * x + y * y) {//(0,0)でなければ
+            l = alpha * strengths[i] * ((l = Math.sqrt(l)) - distances[i]) / l;
+            //alphaは冷却パラメータ，strengths,distancesはforce.start()時に計算される.
+            //distancesは基本長．distancesより短ければ長く，長ければ短くなる方向に力が働く
+            //strengthsは重みで,大きいほど強力にdistancesに近づこうとする?
           x *= l;
           y *= l;
           t.x -= x * (k = s.weight + t.weight ? s.weight / (s.weight + t.weight) : .5);
@@ -6309,6 +6314,76 @@
         alpha: alpha
       });
     };
+
+      /*改変版．元のスプリングモデル(networkx)準拠．
+      にしたいところだが，無理臭い．
+      networkxは全ノード間に働く力を行列的に定義しているが，d3.jsはリンクのあるエッジのみに対して簡略化した力を付与している．
+      networkxに準拠させるためにはnode数で2重ループ回せばできなくはないと思うが，処理数が莫大になるためおそらくまともに動かない．*/
+    //force.tick = function() {
+    //  if ((alpha *= .99) < .005) {
+    //    timer = null;
+    //    event.end({
+    //      type: "end",
+    //      alpha: alpha = 0
+    //    });
+    //    return true;
+    //  }
+    //  var n = nodes.length, m = links.length, q, i, o, s, t, l, k, x, y;
+    //  for (i = 0; i < m; ++i) {//mはリンクの個数
+    //    o = links[i];//リンクオブジェクト
+    //    s = o.source;//ソースノード
+    //    t = o.target;//ターゲットノード
+    //    x = t.x - s.x;
+    //    y = t.y - s.y;
+    //    if (l = x * x + y * y) {//(0,0)でなければ
+    //        l = alpha * strengths[i] * ((l = Math.sqrt(l)) - distances[i]) / l;
+    //        //alphaは冷却パラメータ，strengths,distancesはforce.start()時に計算される.
+    //        //distancesは基本長．distancesより短ければ長く，長ければ短くなる方向に力が働く
+    //        //strengthsは重みで,大きいほど強力にdistancesに近づこうとする?
+    //      x *= l;
+    //      y *= l;
+    //      t.x -= x * (k = s.weight + t.weight ? s.weight / (s.weight + t.weight) : .5);
+    //      t.y -= y * k;
+    //      s.x += x * (k = 1 - k);
+    //      s.y += y * k;
+    //    }
+    //  }
+    //  if (k = alpha * gravity) {
+    //    x = size[0] / 2;
+    //    y = size[1] / 2;
+    //    i = -1;
+    //    if (k) while (++i < n) {
+    //      o = nodes[i];
+    //      o.x += (x - o.x) * k;
+    //      o.y += (y - o.y) * k;
+    //    }
+    //  }
+    //  if (charge) {
+    //    d3_layout_forceAccumulate(q = d3.geom.quadtree(nodes), alpha, charges);
+    //    i = -1;
+    //    while (++i < n) {
+    //      if (!(o = nodes[i]).fixed) {
+    //        q.visit(repulse(o));
+    //      }
+    //    }
+    //  }
+    //  i = -1;
+    //  while (++i < n) {
+    //    o = nodes[i];
+    //    if (o.fixed) {
+    //      o.x = o.px;
+    //      o.y = o.py;
+    //    } else {
+    //      o.x -= (o.px - (o.px = o.x)) * friction;
+    //      o.y -= (o.py - (o.py = o.y)) * friction;
+    //    }
+    //  }
+    //  event.tick({
+    //    type: "tick",
+    //    alpha: alpha
+    //  });
+    //};
+
     force.nodes = function(x) {
       if (!arguments.length) return nodes;
       nodes = x;
