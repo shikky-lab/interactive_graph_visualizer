@@ -26,13 +26,56 @@ def main():
 	G.add_nodes_from(N)
 	G.add_edges_from(E)
 
+	plt.title("Title")
+	plt.axis('equal')#両軸を同じスケールに
+	plt.gcf().set_facecolor('w')
+
 	pos=nx.spring_layout(G)#描画位置はここで確定,全ノードの重みを1にするので重みがかかるのは引力計算のみ
 	nx.draw_networkx(G,pos=pos,node_color='w')
-	#plt.show()
+
+	ax=plt.gca()
+	zoom_factory(ax,base_scale=2.)
+	plt.show()
 	
-	d=nx.readwrite.json_graph.node_link_data(G)
-	with codecs.open("simple_graph.json","w",encoding="utf8")as fo:
-		json.dump(d,fo,indent=4,ensure_ascii=False)
+	#d=nx.readwrite.json_graph.node_link_data(G)
+	#with codecs.open("simple_graph.json","w",encoding="utf8")as fo:
+	#	json.dump(d,fo,indent=4,ensure_ascii=False)
+
+def zoom_factory(ax,base_scale = 2.):
+	def zoom_fun(event):
+		# get the current x and y limits
+		cur_xlim = ax.get_xlim()
+		cur_ylim = ax.get_ylim()
+		cur_xrange = (cur_xlim[1] - cur_xlim[0])
+		cur_yrange = (cur_ylim[1] - cur_ylim[0])
+		xdata = event.xdata # get event x location
+		ydata = event.ydata # get event y location
+		if event.button == 'up':
+			# deal with zoom in
+			scale_factor = 1/base_scale
+		elif event.button == 'down':
+			# deal with zoom out
+			scale_factor = base_scale
+		else:
+			# deal with something that should never happen
+			scale_factor = 1
+			print event.button
+		# set new limits
+		cur_x_rate=(xdata-cur_xlim[0])/cur_xrange
+		cur_y_rate=(ydata-cur_ylim[0])/cur_yrange
+		new_x_range=[xdata - cur_x_rate*(cur_xrange*scale_factor), xdata + (1-cur_x_rate)*(cur_xrange*scale_factor)]
+		new_y_range=[ydata - cur_y_rate*(cur_yrange*scale_factor), ydata + (1-cur_y_rate)*(cur_yrange*scale_factor)]
+		ax.set_xlim(new_x_range)
+		ax.set_ylim(new_y_range)
+
+		plt.draw() # force re-draw
+
+	fig = ax.get_figure() # get the figure of interest
+	# attach the call back
+	fig.canvas.mpl_connect('scroll_event',zoom_fun)
+
+	#return the function
+	return zoom_fun
 
 if __name__=="__main__":
 	main()

@@ -364,6 +364,35 @@ def pick_function(event):
 		fig.text(1,-1,unicode(G_global.node.keys()[i]),fontproperties=prop)
 	#print('onpick3 scatter:', ind, np.take(x, ind), np.take(y, ind))
 
+def zoom_factory(ax,base_scale = 2.):
+	def zoom_fun(event):
+		# get the current x and y limits
+		cur_xlim = ax.get_xlim()
+		cur_ylim = ax.get_ylim()
+		cur_xrange = (cur_xlim[1] - cur_xlim[0])
+		cur_yrange = (cur_ylim[1] - cur_ylim[0])
+		xdata = event.xdata # get event x location
+		ydata = event.ydata # get event y location
+		if event.button == 'up':
+			# deal with zoom in
+			scale_factor = 1/base_scale
+		elif event.button == 'down':
+			# deal with zoom out
+			scale_factor = base_scale
+		else:
+			# deal with something that should never happen
+			scale_factor = 1
+			print event.button
+		# set new limits
+		cur_x_rate=(xdata-cur_xlim[0])/cur_xrange
+		cur_y_rate=(ydata-cur_ylim[0])/cur_yrange
+		new_x_range=[xdata - cur_x_rate*(cur_xrange*scale_factor), xdata + (1-cur_x_rate)*(cur_xrange*scale_factor)]
+		new_y_range=[ydata - cur_y_rate*(cur_yrange*scale_factor), ydata + (1-cur_y_rate)*(cur_yrange*scale_factor)]
+		ax.set_xlim(new_x_range)
+		ax.set_ylim(new_y_range)
+		plt.draw() # force re-draw
+
+
 G_global=None
 def main(search_word,src_pkl_name,exp_name,root_dir,nx_dir,weights_pkl_name=None,topics_K=10,draw_option={}):
 	"""関連フォルダの存在確認"""

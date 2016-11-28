@@ -24,6 +24,7 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Interactive_Graph_d3.py" />
     <Compile Include="Interactive_Graph_test.py" />
   </ItemGroup>
   <ItemGroup>

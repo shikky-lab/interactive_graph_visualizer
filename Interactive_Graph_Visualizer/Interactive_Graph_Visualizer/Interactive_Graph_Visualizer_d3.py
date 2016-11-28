@@ -32,6 +32,7 @@ import cv2
 from sklearn import decomposition
 import json
 import codecs
+import mpld3
 
 prop = matplotlib.font_manager.FontProperties(fname=r'C:\Windows\Fonts\meiryo.ttc')#pyplotに日本語を使うために必要
 
@@ -391,10 +392,18 @@ def main(search_word,src_pkl_name,exp_name,root_dir,nx_dir,weights_pkl_name=None
 	#plt.text(0, 0, "sep="+"{0:.3f}".format(sep),verticalalignment='bottom', horizontalalignment='left')
 	#plt.xticks(np.linspace(0,1,9, endpoint=True))
 
-	ax=plt.gca()
-	zoom_factory(ax,base_scale=2.)
-	plt.show()
-	plt.savefig(os.path.join(nx_dir,comp_func_name+"_graph.png"))
+	#ax=plt.gca()
+	#zoom_factory(ax,base_scale=2.)
+	#plt.show()
+	#plt.savefig(os.path.join(nx_dir,comp_func_name+"_graph.png"))
+
+	#fig=plt.gcf()
+	#mpld3.plugins.clear(fig)
+	#zoom_plugin=mpld3.plugins.Zoom(button=False,enabled=True)
+	#print mpld3.plugins.get_plugins(fig)
+	#mpld3.plugins.connect(fig,zoom_plugin)
+	#mpld3.save_html(fig,"test.html")
+	mpld3.show() # showする！
 
 	"""ネットワークの再保存"""
 	if new_color_map is not None:#カラーマップの更新
