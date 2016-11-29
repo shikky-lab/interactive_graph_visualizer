@@ -19,7 +19,10 @@ import cv2
 import json
 import codecs
 
+
+G=None
 def main():
+	global G
 	G=nx.Graph()
 	N=[1,2,3,4,5,6,7,8,9,10]
 	E= [(1,2),(1,8),(2,3),(2,4),(4,5),(6,7),(6,8),(8,9),(8,10),(4,9),(2,5),(3,7)]
@@ -31,7 +34,7 @@ def main():
 	plt.gcf().set_facecolor('w')
 
 	pos=nx.spring_layout(G)#描画位置はここで確定,全ノードの重みを1にするので重みがかかるのは引力計算のみ
-	nx.draw_networkx(G,pos=pos,node_color='w')
+	nx.draw_networkx(G,pos=pos,node_color='w',pick_func=pick_function)
 
 	ax=plt.gca()
 	zoom_factory(ax,base_scale=2.)
@@ -40,6 +43,15 @@ def main():
 	#d=nx.readwrite.json_graph.node_link_data(G)
 	#with codecs.open("simple_graph.json","w",encoding="utf8")as fo:
 	#	json.dump(d,fo,indent=4,ensure_ascii=False)
+
+def pick_function(event):
+	global G
+	ind=event.ind
+	ax=plt.gca()
+	fig=ax.get_figure()
+	for i in ind:
+		print ind,"file_no=",G.node.keys()[i]
+		#fig.text(1,-1,unicode(G.node.keys()[i]),fontproperties=prop)
 
 def zoom_factory(ax,base_scale = 2.):
 	def zoom_fun(event):
@@ -68,7 +80,8 @@ def zoom_factory(ax,base_scale = 2.):
 		ax.set_xlim(new_x_range)
 		ax.set_ylim(new_y_range)
 
-		plt.draw() # force re-draw
+		ax.get_figure().canvas.draw()
+		#plt.draw() # force re-draw
 
 	fig = ax.get_figure() # get the figure of interest
 	# attach the call back

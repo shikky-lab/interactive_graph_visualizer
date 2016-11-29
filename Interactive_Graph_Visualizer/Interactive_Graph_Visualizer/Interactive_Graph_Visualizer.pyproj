@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>57538fc4-2d92-427d-97d5-f55fd20be1a9</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>Interactive_Graph_Visualizer.py</StartupFile>
+    <StartupFile>Interactive_Graph_Visualizer_Qt.py</StartupFile>
     <SearchPath>..\..\MyPythonModule\;..\networkx-master\</SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
@@ -29,11 +29,15 @@
     <Compile Include="color_changer.py" />
     <Compile Include="cvt_to_nxtype2.py" />
     <Compile Include="Interactive_Graph_Visualizer_d3.py" />
+    <Compile Include="Interactive_Graph_Visualizer_Qt.py">
+      <SubType>
+      </SubType>
+    </Compile>
     <Compile Include="LDA_for_SS.py" />
     <Compile Include="LDA_modify_for_graph.py" />
     <Compile Include="LDA_PCA.py" />
     <Compile Include="make_lch_picker.py" />
-    <Compile Include="Interactive_Graph_Visualizer.py" />
+    <Compile Include="my_graph_drawer.py" />
     <Compile Include="make_network_by_nx.py" />
     <Compile Include="series_act.py" />
   </ItemGroup>

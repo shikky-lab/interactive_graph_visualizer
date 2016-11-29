@@ -30,8 +30,8 @@ import LDA_PCA
 import make_lch_picker
 import cv2
 from sklearn import decomposition
-import json
-import codecs
+#import json
+#import codecs
 
 prop = matplotlib.font_manager.FontProperties(fname=r'C:\Windows\Fonts\meiryo.ttc')#pyplotに日本語を使うために必要
 
@@ -166,7 +166,16 @@ def get_color_map_theta(G,pos,lda,comp_type="COMP1",lumine=255,cmap="lch"):
 	return color_map
 
 """色相をPCAの1次元で，彩度をそれぞれのトピック分布の各比率で合成(composition)"""
-def draw_node_with_lch(G,pos,lda,size,comp_type="COMP1",lumine=255,color_map_by="phi",cmap="lch"):
+def draw_node_with_lch(G,pos,**kwargs):
+	lda=kwargs.get("lda")
+	size=kwargs.get("size")
+	draw_option=kwargs.get("draw_option")
+	color_map_by=draw_option.get("color_map_by")
+	comp_type=draw_option.get("comp_type")
+	lumine=draw_option.get("lumine")
+	cmap=draw_option.get("cmap")
+	ax=draw_option.get("ax")
+
 	if color_map_by=="phi":
 		color_map=get_color_map_phi(G,pos,lda,comp_type,lumine=lumine)
 		node_color=color_map.values()
@@ -176,8 +185,7 @@ def draw_node_with_lch(G,pos,lda,size,comp_type="COMP1",lumine=255,color_map_by=
 	elif color_map_by==None:
 		node_color=["#FFFFFF"]*len(G.node)
 	size_array=size.values()
-	nx.draw_networkx_nodes(G,pos=pos,node_color=node_color,node_size=size_array,pick_func=pick_function);
-	#nx.draw_networkx_nodes(G,pos=pos,node_color=node_color,node_size=size_array);
+	nx.draw_networkx_nodes(G,pos=pos,node_color=node_color,node_size=size_array,ax=ax)#,pick_func=pick_function)
 	return color_map
 
 """トピック分布から色を1色決定し，lchの形で返す"""
@@ -207,23 +215,30 @@ def draw_axis(xstep,ystep=None):
 	plt.yticks(np.arange(ymin,ymax,xstep))#なぜか座標軸が消えるので補完
 
 """ノードおよびエッジを描画する．オプションによって動作指定"""
-def draw_network(G,pos,size,option="REPR",lda=None,dpi=100,with_label=True,lumine=255,color_map_by="phi",cmap="lch"):
+def draw_network(G,pos,**kwargs):
+	size=kwargs.get("size")
+	lda=kwargs.get("lda")
+	draw_option=kwargs.get("draw_option")
+	node_type=draw_option.get("node_type")
+	ax=draw_option.get("ax")
+	#with_label=draw_option.get("with_label")
+
 	color_map=None
-	if option=="REPR":
+	if node_type=="REPR":
 		color_map=nx.get_node_attributes(G,"color")
 		size_array=size.values()
 		#nx.draw(G,pos=pos,with_labels=True)#with_labelsは各ノードのラベル表示.この関数事体を呼ばずに下二つを呼ぶと軸ラベルがつく．内部的にはいろいろ処理した後下二つを呼んでる
-		nx.draw_networkx_nodes(G,pos=pos,node_color=color_map.values(),node_size=size_array);
+		nx.draw_networkx_nodes(G,pos=pos,node_color=color_map.values(),node_size=size_array,ax=ax);
 		#nx.draw_networkx_edges(G,pos,font_size=int(12*100/dpi))
-	elif option=="PIE":
+	elif node_type=="PIE":
 		draw_node_with_pie(G,pos,lda,size)
 		#draw_axis(xstep=0.2,ystep=0.2)#なぜか上処理で軸が消えてしまうため書き直す
-	elif option=="REPR2" or option=="COMP1" or option=="COMP2":
-		color_map=draw_node_with_lch(G,pos,lda,size,comp_type=option,lumine=lumine,color_map_by=color_map_by,cmap=cmap)
+	elif node_type=="REPR2" or node_type=="COMP1" or node_type=="COMP2":
+		color_map=draw_node_with_lch(G,pos,**kwargs)
 
-	nx.draw_networkx_edges(G,pos)
-	if with_label==True:
-		nx.draw_networkx_labels(G,pos,font_size=int(12*100/dpi))
+	nx.draw_networkx_edges(G,pos,ax=ax)
+	#if with_label==True:
+	#	nx.draw_networkx_labels(G,pos,font_size=int(12*100/dpi))
 	return color_map
 
 """オプションを読みやすい形式で保存.前処理をしてから渡す"""
@@ -261,53 +276,14 @@ def calc_nodesize(G,attr="a_score",min_size=1000,max_size=5000):
 		size_dict[node_no]=size
 	return size_dict
 
-def pick_function(event):
-	global G_global
-	ind=event.ind
-	ax=plt.gca()
-	fig=ax.get_figure()
-	for i in ind:
-		print ind,"file_no=",G_global.node.keys()[i]
-		fig.text(1,-1,unicode(G_global.node.keys()[i]),fontproperties=prop)
-	#print('onpick3 scatter:', ind, np.take(x, ind), np.take(y, ind))
+def main(params):
+	root_dir=params.get("root_dir")
+	exp_name=params.get("exp_name")
+	nx_dir=params.get("nx_dir")
+	src_pkl_name=params.get("src_pkl_name")
+	weights_pkl_name=params.get("weights_pkl_name")
+	draw_option=params.get("draw_option")
 
-def zoom_factory(ax,base_scale = 2.):
-	def zoom_fun(event):
-		# get the current x and y limits
-		cur_xlim = ax.get_xlim()
-		cur_ylim = ax.get_ylim()
-		cur_xrange = (cur_xlim[1] - cur_xlim[0])
-		cur_yrange = (cur_ylim[1] - cur_ylim[0])
-		xdata = event.xdata # get event x location
-		ydata = event.ydata # get event y location
-		if event.button == 'up':
-			# deal with zoom in
-			scale_factor = 1/base_scale
-		elif event.button == 'down':
-			# deal with zoom out
-			scale_factor = base_scale
-		else:
-			# deal with something that should never happen
-			scale_factor = 1
-			print event.button
-		# set new limits
-		cur_x_rate=(xdata-cur_xlim[0])/cur_xrange
-		cur_y_rate=(ydata-cur_ylim[0])/cur_yrange
-		new_x_range=[xdata - cur_x_rate*(cur_xrange*scale_factor), xdata + (1-cur_x_rate)*(cur_xrange*scale_factor)]
-		new_y_range=[ydata - cur_y_rate*(cur_yrange*scale_factor), ydata + (1-cur_y_rate)*(cur_yrange*scale_factor)]
-		ax.set_xlim(new_x_range)
-		ax.set_ylim(new_y_range)
-		plt.draw() # force re-draw
-
-	fig = ax.get_figure() # get the figure of interest
-	# attach the call back
-	fig.canvas.mpl_connect('scroll_event',zoom_fun)
-
-	#return the function
-	return zoom_fun
-
-G_global=None
-def main(search_word,src_pkl_name,exp_name,root_dir,nx_dir,weights_pkl_name=None,topics_K=10,draw_option={}):
 	"""関連フォルダの存在確認"""
 	if not os.path.exists(root_dir):
 		print "root_dir",root_dir,"is not exist"
@@ -325,83 +301,55 @@ def main(search_word,src_pkl_name,exp_name,root_dir,nx_dir,weights_pkl_name=None
 	with open(os.path.join(nx_dir,src_pkl_name),"r") as fi:
 		G=pickle.load(fi)
 	with open(os.path.join(nx_dir,weights_pkl_name)) as fi:
-		all_node_weights=pickle.load(fi)
+		all_nodes_weights=pickle.load(fi)
 	with open(os.path.join(exp_dir,"instance.pkl")) as fi:
 	   lda=pickle.load(fi)
 	print "data_loaded"
 
 	"""パラメータの読み込み"""
 	weight_type=draw_option.get("weight_type",["ATTR","REPUL"])
-	comp_func_name=draw_option.get("comp_func_name","comp1_1")
-	node_type=draw_option.get("node_type","REPR")
 	do_rescale=draw_option.get("do_rescale",True)
-	with_label=draw_option.get("with_label",False)
 	size_attr=draw_option.get("size_attr","None")
-	lumine=draw_option.get("lumine",255)
 	save_drawoption(draw_option,os.path.join(nx_dir,"draw_option.txt"))
-	color_map_by=draw_option.get("color_map_by","phi")
-	cmap=draw_option.get("cmap","lch")
-
-	"""描画位置決定前の間引き．ほんとになかったことにする用"""
-	#remove_nodes=range(1,10)#バックリンクノードの間引き．本来なら先にやっておくべきだがやり直すの面倒なので放置
-	#for remove_node in remove_nodes:
-	#	G.remove_node(remove_node)
-	#new_all_nodes_weights=np.delete(all_node_weights,remove_nodes,axis=0)
-	#new_all_nodes_weights=np.delete(new_all_nodes_weights,remove_nodes,axis=1)
-
-	new_all_nodes_weights=all_node_weights
 
 	"""グラフの構築・描画"""
 	G_undirected=G#適切なスプリングモデルのためには無向グラフである必要あり
 	if G.is_directed():
 		G_undirected=G.to_undirected()
-	global G_global
-	G_global=G_undirected
 		
 	revised_hits_scores=calc_nodesize(G,attr=size_attr,min_size=1,max_size=3)#引力斥力計算用に正規化したhitsスコア
-	dpi=20
-	prop.set_size(int(12*100/dpi))
 
 	initial_pos=pos_initializer(G_undirected,os.path.join(root_dir,"nest1.rand"))
 	pos=initial_pos
-	#for i in range(1,101,10):
-	plt.figure(figsize=(1600/dpi, 900/dpi), dpi=dpi)
-	plt.title("SearchWord="+search_word,fontproperties=prop)
-	plt.axis('equal')#両軸を同じスケールに
-	plt.rcParams["font.size"]=int(12*100/dpi)
-	plt.gcf().set_facecolor('w')
+
 	if "ATTR" in weight_type:
 		if "REPUL" in weight_type:
-			pos=nx.spring_layout(G_undirected,pos=pos,all_node_weights=new_all_nodes_weights,rescale=do_rescale,weight_type=weight_type,revised_hits_scores=revised_hits_scores)#描画位置はここで確定,両方の重みをかける
+			pos=nx.spring_layout(G_undirected,pos=pos,all_node_weights=all_nodes_weights,rescale=do_rescale,weight_type=weight_type,revised_hits_scores=revised_hits_scores)#描画位置はここで確定,両方の重みをかける
 		else:
 			pos=nx.spring_layout(G_undirected,pos=initial_pos,all_node_weights=np.ones(1))#描画位置はここで確定,全ノードの重みを1にするので重みがかかるのは引力計算のみ
 	elif "REPUL" in weight_type:
-		pos=nx.spring_layout(G_undirected,pos=initial_pos,all_node_weights=new_all_nodes_weights,weight="wei")#描画位置はここで確定,重みがかかるのは斥力計算のみ
+		pos=nx.spring_layout(G_undirected,pos=initial_pos,all_node_weights=all_nodes_weights,weight="wei")#描画位置はここで確定,重みがかかるのは斥力計算のみ
 	else:
 		pos=nx.spring_layout(G_undirected,pos=initial_pos,weight="wei")#描画位置はここで確定
 		
 	"""実際の描画処理"""
 	size_dict=calc_nodesize(G,attr=size_attr,min_size=1000,max_size=3000)
-	new_color_map=draw_network(G,pos,size=size_dict,option=node_type,lda=lda,dpi=dpi,with_label=with_label,lumine=lumine,color_map_by=color_map_by,cmap=cmap)
-	#plt.savefig(os.path.join(nx_process_dir,unicode(i)+"_graph.png"))
+	#new_color_map=draw_network(G,pos,size=size_dict,option=node_type,lda=lda,dpi=dpi,with_label=with_label,lumine=lumine,color_map_by=color_map_by,cmap=cmap)
+	draw_kwargs={
+			"size":size_dict,
+			"lda":lda,
+			"draw_option":draw_option
+		}
+	draw_network(G,pos,**draw_kwargs)
 
-	"""データの出力"""
-	path=os.path.join(nx_dir,'graph.dot')
-	nx.drawing.nx_agraph.write_dot(G,path)
-	#plt.text(0, 0, "sep="+"{0:.3f}".format(sep),verticalalignment='bottom', horizontalalignment='left')
-	#plt.xticks(np.linspace(0,1,9, endpoint=True))
-
-	ax=plt.gca()
-	zoom_factory(ax,base_scale=2.)
-	plt.show()
-	plt.savefig(os.path.join(nx_dir,comp_func_name+"_graph.png"))
-
-	"""ネットワークの再保存"""
-	if new_color_map is not None:#カラーマップの更新
-		nx.set_node_attributes(G,"color",new_color_map)
-	d=nx.readwrite.json_graph.node_link_data(G)
-	with codecs.open("graph.json","w",encoding="utf8")as fo:
-		json.dump(d,fo,indent=4,ensure_ascii=False)
+	#"""ネットワークの再保存"""
+	#if new_color_map is not None:#カラーマップの更新
+	#	nx.set_node_attributes(G,"color",new_color_map)
+	#d=nx.readwrite.json_graph.node_link_data(G)
+	#with codecs.open("graph.json","w",encoding="utf8")as fo:
+	#	json.dump(d,fo,indent=4,ensure_ascii=False)
+	#with open("final_graph.gpkl","w") as fo:
+	#	pickle.dump(G,fo)
 
 def suffix_generator(target=None,is_largest=False):
 	suffix=""
@@ -411,60 +359,23 @@ def suffix_generator(target=None,is_largest=False):
 		suffix+="_largest"
 	return suffix
 
-def zoom_factory(ax,base_scale = 2.):
-	def zoom_fun(event):
-		# get the current x and y limits
-		cur_xlim = ax.get_xlim()
-		cur_ylim = ax.get_ylim()
-		cur_xrange = (cur_xlim[1] - cur_xlim[0])
-		cur_yrange = (cur_ylim[1] - cur_ylim[0])
-		xdata = event.xdata # get event x location
-		ydata = event.ydata # get event y location
-		if event.button == 'up':
-			# deal with zoom in
-			scale_factor = 1/base_scale
-		elif event.button == 'down':
-			# deal with zoom out
-			scale_factor = base_scale
-		else:
-			# deal with something that should never happen
-			scale_factor = 1
-			print event.button
-		# set new limits
-		cur_x_rate=(xdata-cur_xlim[0])/cur_xrange
-		cur_y_rate=(ydata-cur_ylim[0])/cur_yrange
-		new_x_range=[xdata - cur_x_rate*(cur_xrange*scale_factor), xdata + (1-cur_x_rate)*(cur_xrange*scale_factor)]
-		new_y_range=[ydata - cur_y_rate*(cur_yrange*scale_factor), ydata + (1-cur_y_rate)*(cur_yrange*scale_factor)]
-		ax.set_xlim(new_x_range)
-		ax.set_ylim(new_y_range)
-		plt.draw() # force re-draw
-
-	fig = ax.get_figure() # get the figure of interest
-	# attach the call back
-	fig.canvas.mpl_connect('scroll_event',zoom_fun)
-
-	#return the function
-	return zoom_fun
-
 if __name__ == "__main__":
-	search_word="iPhone"
-	max_page=400
-	root_dir=ur"C:/Users/fukunaga/Desktop/collect_urls/search_"+search_word+"_"+unicode(max_page)+"_add_childs"
-	K=10
-
-	target="myexttext"#対象とするwebページの抽出方法を指定
-	is_largest=True#リンクから構築したグラフのうち，最大サイズのモノのみを使う場合True
-
-	exp_name="k"+unicode(K)+suffix_generator(target,is_largest)
-	comp_func_name="comp4_2"
-	nx_dir=os.path.join(os.path.join(root_dir,exp_name),"nx_datas")
-	src_pkl_name="G_with_params_"+comp_func_name+".gpkl"
-	weights_pkl_name="all_node_weights_"+comp_func_name+".gpkl"
-
+	params={}
+	params["search_word"]="iPhone"
+	params["max_page"]=400
+	params["K"]=10
+	params["root_dir"]=ur"C:/Users/fukunaga/Desktop/collect_urls/search_"+params["search_word"]+"_"+unicode(params["max_page"])+"_add_childs"
+	params["target"]="myexttext"
+	params["is_largest"]=True
+	params["exp_name"]="k"+unicode(params["K"])+suffix_generator(params["target"],params["is_largest"])
+	params["comp_func_name"]="comp4_2"
+	params["nx_dir"]=os.path.join(os.path.join(params["root_dir"],params["exp_name"]),"nx_datas")
+	params["src_pkl_name"]="G_with_params_"+params["comp_func_name"]+".gpkl"
+	params["weights_pkl_name"]="all_node_weights_"+params["comp_func_name"]+".gpkl"
 	draw_option={
-		"comp_func_name":comp_func_name,
-		"weight_type":[],
-		#"weight_type":["ATTR","REPUL"],
+		"comp_func_name":params["comp_func_name"],
+		#"weight_type":[],
+		"weight_type":["ATTR","REPUL"],
 		#"weight_type":["ATTR","REPUL","HITS"],#オーソリティかハブかはsize_attrで指定
 		"node_type":"COMP1",
 		#"node_type":"PIE",
@@ -480,4 +391,10 @@ if __name__ == "__main__":
 		#"color_map_by":"pie"
 		#"color_map_by":None
 		}
-	main(search_word=search_word,src_pkl_name=src_pkl_name,weights_pkl_name=weights_pkl_name,exp_name=exp_name,root_dir=root_dir,nx_dir=nx_dir,topics_K=K,draw_option=draw_option)
+	ax=plt.figure().add_subplot(111)
+	draw_option["ax"]=ax
+
+	params["draw_option"]=draw_option
+	main(params)
+	#ax.get_figure().show()
+	plt.show()
