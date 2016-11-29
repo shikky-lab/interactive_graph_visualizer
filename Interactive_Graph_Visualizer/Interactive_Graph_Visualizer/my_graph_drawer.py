@@ -175,6 +175,7 @@ def draw_node_with_lch(G,pos,**kwargs):
 	lumine=draw_option.get("lumine")
 	cmap=draw_option.get("cmap")
 	ax=draw_option.get("ax")
+	pick_func=draw_option.get("pick_func")
 
 	if color_map_by=="phi":
 		color_map=get_color_map_phi(G,pos,lda,comp_type,lumine=lumine)
@@ -185,7 +186,7 @@ def draw_node_with_lch(G,pos,**kwargs):
 	elif color_map_by==None:
 		node_color=["#FFFFFF"]*len(G.node)
 	size_array=size.values()
-	nx.draw_networkx_nodes(G,pos=pos,node_color=node_color,node_size=size_array,ax=ax)#,pick_func=pick_function)
+	nx.draw_networkx_nodes(G,pos=pos,node_color=node_color,node_size=size_array,ax=ax,pick_func=pick_func)
 	return color_map
 
 """トピック分布から色を1色決定し，lchの形で返す"""
@@ -253,7 +254,7 @@ def calc_nodesize(G,attr="a_score",min_size=1000,max_size=5000):
 	if type(attr)!=str and type(attr)!=unicode:
 		normal_size=max_size-min_size
 		normal_size=attr
-		print "all size uniformed"
+		#print "all size uniformed"
 		return dict([(node_no,normal_size) for node_no in G.node])
 
 	a_scores,h_scores=nx.hits(G)
@@ -317,7 +318,7 @@ def main(params):
 	if G.is_directed():
 		G_undirected=G.to_undirected()
 		
-	revised_hits_scores=calc_nodesize(G,attr=size_attr,min_size=1,max_size=3)#引力斥力計算用に正規化したhitsスコア
+	revised_hits_scores=calc_nodesize(G,attr=size_attr,min_size=1,max_size=3)#引力斥力計算用に正規化したhitsスコア.calc_nodesizeを共用
 
 	initial_pos=pos_initializer(G_undirected,os.path.join(root_dir,"nest1.rand"))
 	pos=initial_pos

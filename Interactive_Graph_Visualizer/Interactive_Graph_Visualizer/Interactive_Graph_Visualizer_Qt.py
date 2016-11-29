@@ -72,6 +72,12 @@ class ForceGraph():
 		self.axes.axis('equal')#両軸を同じスケールに
 
 		self.params["draw_option"]["ax"]=self.axes
+		self.params["draw_option"]["pick_func"]=self.pick_func
+
+		nx_dir=self.params.get("nx_dir")
+		src_pkl_name=self.params.get("src_pkl_name")
+		with open(os.path.join(nx_dir,src_pkl_name),"r") as fi:
+			self.G=pickle.load(fi)
 
 	def on_draw(self):
 		"""
@@ -81,7 +87,9 @@ class ForceGraph():
 		my_graph_drawer.main(self.params)
 		self.canvas.draw()
 
-	def pick_function(self,event):
+	def pick_func(self,event):
+		if event.mouseevent.name != "button_press_event":
+			return
 		idxs=event.ind
 		for i in idxs:
 			print idxs,"file_no=",self.G.node.keys()[i]
@@ -100,11 +108,16 @@ class VerboseWidget(QtGui.QWidget):
 		vbox = QtGui.QVBoxLayout(self)
 		vbox.addWidget(self.table)    #add canvs to the layout
 
-	def change_content(self,file_no):
 		exp_dir=os.path.join(self.params["root_dir"],self.params["exp_name"])
-		src_pages_dir=os.path.join(self.params["root_dir"],"pages")
+		src_pkl_name=self.params.get("src_pkl_name")
+		nx_dir=self.params.get("nx_dir")
 		with open(os.path.join(exp_dir,"instance.pkl")) as fi:
-		   lda=pickle.load(fi)
+		   self.lda=pickle.load(fi)
+		with open(os.path.join(nx_dir,src_pkl_name),"r") as fi:
+			self.G=pickle.load(fi)
+
+	def change_content(self,file_no):
+		src_pages_dir=os.path.join(self.params["root_dir"],"pages")
 		with open(os.path.join(src_pages_dir,unicode(file_no)+".json"),"r") as fj:
 			page_info=json.load(fj)
 		#self.label.setText(page_info.get("title"))
@@ -116,10 +129,10 @@ class VerboseWidget(QtGui.QWidget):
 			["url",u"url"],
 			["domain",u"ドメイン"],
 			#"len_parents",
-			["len_childs",u"リンク先の数"]
+			["len_childs",u"リンク先の数"],
 			#"repTopic",
-			#["auth_score",u"オーソリティスコア"],
-			#["hub_score",u"ハブスコア"]
+			["auth_score",u"オーソリティスコア"],
+			["hub_score",u"ハブスコア"]
 			]
 		self.table.setRowCount(len(tgt_params))
 		self.table.setColumnCount(2)
@@ -137,7 +150,7 @@ class VerboseWidget(QtGui.QWidget):
 				if(page_info.get("text") != None):
 					val=len(page_info.get("text"))
 			elif tgt_param=="repTopic":
-				val=int(lda.n_m_z[id].argmax()+1)
+				val=int(self.lda.n_m_z[id].argmax()+1)
 			elif tgt_param=="len_parents":
 				parents=page_info.get("parents")
 				if parents != None:
@@ -147,9 +160,9 @@ class VerboseWidget(QtGui.QWidget):
 				if childs != None:
 					val=len(childs)
 			elif tgt_param=="auth_score":
-				val=G.page_info.get(file_no).get("a_score")
+				val=self.G.node.get(file_no).get("a_score")
 			elif tgt_param=="hub_score":
-				val=G.page_info.get(file_no).get("h_score")
+				val=self.G.node.get(file_no).get("h_score")
 			else:
 				val=page_info.get(tgt_param)
 			if type(val) is not unicode:
