@@ -2,8 +2,9 @@
 # -*- coding: utf-8 -*-
 
 import cv2
-import cv
+#import cv
 import numpy as np
+import matplotlib.pyplot as plt
 
 """極座標から直交座標への変換"""
 def cvt_polar_to_orth(r,theta):
@@ -88,6 +89,7 @@ def test_lch():
 	cv2.createTrackbar('H','image',0,200,nothing)
 	lch_img=np.zeros((500,500,3),dtype=np.float32)
 	l,c_flt,h_flt=cv2.split(lch_img)
+	html_c="#000000"
 	while 1:
 		l[:]=cv2.getTrackbarPos('L','image')
 		c_flt[:]=cv2.getTrackbarPos('C','image')/100.
@@ -103,7 +105,10 @@ def test_lch():
 		if k == 27:
 			break
 		elif k!=255:
-			print cvtLCH_to_HTML(lch[0,0])
+			html_c=cvtLCH_to_HTML(lch[0,0])
+			print html_c
+	plt.hist(np.random.randn(1000),color=html_c)
+	plt.show()
 
 def cv_colormap():
 	img=cv2.imread("lena.jpg",1)
