@@ -80,9 +80,6 @@ class ForceGraph():
 			self.G=pickle.load(fi)
 
 	def on_draw(self):
-		"""
-		redraw the figure
-		"""
 		self.axes.clear()
 		my_graph_drawer.main(self.params)
 		self.canvas.draw()
@@ -93,7 +90,8 @@ class ForceGraph():
 		idxs=event.ind
 		for i in idxs:
 			print idxs,"file_no=",self.G.node.keys()[i]
-			self.vervoseWidget.change_content(i)
+			#self.vervoseWidget.change_content(i)
+			self.vervoseWidget.change_content(self.G.node.keys()[i])
 			break
 
 class VerboseWidget(QtGui.QWidget):
@@ -106,7 +104,10 @@ class VerboseWidget(QtGui.QWidget):
 		self.table.verticalHeader().setVisible(False)
 		self.table.horizontalHeader().setStretchLastSection(True)
 		vbox = QtGui.QVBoxLayout(self)
-		vbox.addWidget(self.table)    #add canvs to the layout
+		vbox.addWidget(self.table,1)    #add canvs to the layout
+
+		self.topicGraph = TopicGraph(vbox,params=self.params)
+		vbox.addWidget(self.topicGraph.canvas,1)
 
 		exp_dir=os.path.join(self.params["root_dir"],self.params["exp_name"])
 		src_pkl_name=self.params.get("src_pkl_name")
@@ -120,7 +121,13 @@ class VerboseWidget(QtGui.QWidget):
 		src_pages_dir=os.path.join(self.params["root_dir"],"pages")
 		with open(os.path.join(src_pages_dir,unicode(file_no)+".json"),"r") as fj:
 			page_info=json.load(fj)
-		#self.label.setText(page_info.get("title"))
+
+		"""トピックグラフ表示"""
+		file_id_dict_inv = {v:k for k, v in self.lda.file_id_dict.items()}#ファイル名とLDAでの文書番号(逆引き)．
+		lda_no=file_id_dict_inv.get(file_no)
+		if lda_no != None:
+			self.topicGraph.on_draw(self.lda.theta()[lda_no])#トピック分布グラフの表示
+
 		tgt_params=[
 			#["id","id"],
 			#"name_id",
@@ -170,6 +177,31 @@ class VerboseWidget(QtGui.QWidget):
 			self.table.setItem(i,0,QtGui.QTableWidgetItem(name))
 			self.table.setItem(i,1,QtGui.QTableWidgetItem(val))
 
+class TopicGraph():
+	def __init__(self,*args,**kwargs):
+		parent=kwargs.get("parent")
+		self.params=kwargs.get("params")
+
+		# Create the mpl Figure and FigCanvas objects.
+		self.dpi = 100
+		self.fig = Figure((5,4), dpi=self.dpi)
+		self.canvas = FigureCanvas(self.fig)    #pass a figure to the canvas
+		self.canvas.setParent(parent)
+
+		"""plt画面に関する設定"""
+		self.axes = self.fig.add_subplot(111)
+		self.fig.set_facecolor('w')
+
+		self.params["draw_option"]["ax"]=self.axes
+
+	def on_draw(self,theta):
+		self.axes.clear()
+		K=len(theta)
+		label_strs=["Topic"+unicode(k+1) for k in range(K+1)]
+		self.axes.bar(range(1,K+1),theta,align="center",alpha=0.7)
+		self.axes.axis([0,K+1,0,1])
+		self.canvas.draw()
+
 class AppForm(QtGui.QMainWindow):
 	def __init__(self,*args,**kwargs):#parent=None,params=None):
 		parent=kwargs.get("parent")
@@ -188,6 +220,7 @@ class AppForm(QtGui.QMainWindow):
 		#set layout
 		hbox = QtGui.QHBoxLayout()
 		hbox.addWidget(self.forceGraph.canvas,3)    #add canvs to the layout
+
 		hbox.addWidget(self.verboseWidget,1)
 
 		self.main_frame.setLayout(hbox)
@@ -208,8 +241,8 @@ def main(args):
 	params["search_word"]="iPhone"
 	params["max_page"]=400
 	params["K"]=10
-	#params["root_dir"]=ur"C:/Users/fukunaga/Desktop/collect_urls/search_"+params["search_word"]+"_"+unicode(params["max_page"])+"_add_childs"
-	params["root_dir"]=ur"C:/Users/LNLD/Desktop/collect_urls/search_"+params["search_word"]+"_"+unicode(params["max_page"])+"_add_childs"
+	params["root_dir"]=ur"C:/Users/fukunaga/Desktop/collect_urls/search_"+params["search_word"]+"_"+unicode(params["max_page"])+"_add_childs"
+	#params["root_dir"]=ur"C:/Users/LNLD/Desktop/collect_urls/search_"+params["search_word"]+"_"+unicode(params["max_page"])+"_add_childs"
 	params["target"]="myexttext"
 	params["is_largest"]=True
 	params["exp_name"]="k"+unicode(params["K"])+suffix_generator(params["target"],params["is_largest"])
