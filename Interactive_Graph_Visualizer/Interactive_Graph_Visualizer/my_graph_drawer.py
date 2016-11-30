@@ -365,11 +365,13 @@ if __name__ == "__main__":
 	params["search_word"]="iPhone"
 	params["max_page"]=400
 	params["K"]=10
-	params["root_dir"]=ur"C:/Users/fukunaga/Desktop/collect_urls/search_"+params["search_word"]+"_"+unicode(params["max_page"])+"_add_childs"
+	#params["root_dir"]=ur"C:/Users/fukunaga/Desktop/collect_urls/search_"+params["search_word"]+"_"+unicode(params["max_page"])+"_add_childs"
+	params["root_dir"]=ur"C:/Users/LNLD/Desktop/collect_urls/search_"+params["search_word"]+"_"+unicode(params["max_page"])+"_add_childs"
 	params["target"]="myexttext"
 	params["is_largest"]=True
 	params["exp_name"]="k"+unicode(params["K"])+suffix_generator(params["target"],params["is_largest"])
 	params["comp_func_name"]="comp4_2"
+	params["root_dir"]=ur"C:/Users/LNLD/Desktop/collect_urls/search_"+params["search_word"]+"_"+unicode(params["max_page"])+"_add_childs"
 	params["nx_dir"]=os.path.join(os.path.join(params["root_dir"],params["exp_name"]),"nx_datas")
 	params["src_pkl_name"]="G_with_params_"+params["comp_func_name"]+".gpkl"
 	params["weights_pkl_name"]="all_node_weights_"+params["comp_func_name"]+".gpkl"
