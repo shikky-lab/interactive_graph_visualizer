@@ -5,7 +5,8 @@ import os
 
 #import numpy as np
 from PyQt4 import QtGui
-#from PyQt4 import QtCore 
+from PyQt4 import Qt
+from PyQt4 import QtCore 
 
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
@@ -98,6 +99,8 @@ class VerboseWidget(QtGui.QWidget):
 	def __init__(self,*args,**kwargs):
 		parent=kwargs.get("parent")
 		QtGui.QWidget.__init__(self ,parent=parent)
+
+		self.topicGraph=kwargs.get("topicGraph")
 		self.params=kwargs.get("params")
 		self.table=QtGui.QTableWidget()
 		self.table.horizontalHeader().setVisible(False)
@@ -105,9 +108,6 @@ class VerboseWidget(QtGui.QWidget):
 		self.table.horizontalHeader().setStretchLastSection(True)
 		vbox = QtGui.QVBoxLayout(self)
 		vbox.addWidget(self.table,1)    #add canvs to the layout
-
-		self.topicGraph = TopicGraph(vbox,params=self.params)
-		vbox.addWidget(self.topicGraph.canvas,1)
 
 		exp_dir=os.path.join(self.params["root_dir"],self.params["exp_name"])
 		src_pkl_name=self.params.get("src_pkl_name")
@@ -213,20 +213,28 @@ class AppForm(QtGui.QMainWindow):
 
 	def creat_main_window(self):
 		self.main_frame = QtGui.QWidget()
-		#self.verboseWidget=VerboseWidget(self.main_frame,params=self.params)
-		self.verboseWidget=VerboseWidget(self.main_frame,params=self.params)
+		self.topicGraph = TopicGraph(self.main_frame,params=self.params)
+		self.verboseWidget=VerboseWidget(self.main_frame,params=self.params,topicGraph=self.topicGraph)
 		self.forceGraph = ForceGraph(self.main_frame,params=self.params,verboseWidget=self.verboseWidget)
 
 		#set layout
 		hbox = QtGui.QHBoxLayout()
-		hbox.addWidget(self.forceGraph.canvas,3)    #add canvs to the layout
-
-		hbox.addWidget(self.verboseWidget,1)
+		hbox.addWidget(self.forceGraph.canvas)    #add canvs to the layout
 
 		self.main_frame.setLayout(hbox)
 
-		#set widget
+		right_dock1 = QtGui.QDockWidget('Information',self)
+		right_dock1.setWidget(self.verboseWidget)
+		self.addDockWidget(Qt.Qt.RightDockWidgetArea, right_dock1)
+
+		right_dock2 = QtGui.QDockWidget('Topics',self)
+		right_dock2.setWidget(self.topicGraph.canvas)
+		self.addDockWidget(Qt.Qt.RightDockWidgetArea, right_dock2)
+
 		self.setCentralWidget(self.main_frame)
+
+		#set widget
+		#self.setCentralWidget(self.main_frame)
 		
 def suffix_generator(target=None,is_largest=False):
 	suffix=""
@@ -276,7 +284,7 @@ def main(args):
 
 	app = QtGui.QApplication(args)
 	form = AppForm(params=params)
-	form.show()
+	form.showMaximized()
 	sys.exit(app.exec_())
 
 if __name__ == "__main__":

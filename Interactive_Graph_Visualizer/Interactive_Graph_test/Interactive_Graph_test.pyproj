@@ -24,6 +24,10 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="dock_test.py">
+      <SubType>
+      </SubType>
+    </Compile>
     <Compile Include="Interactive_Graph_d3.py" />
     <Compile Include="Interactive_Graph_test.py" />
     <Compile Include="Qt_test.py">
