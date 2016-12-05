@@ -135,7 +135,8 @@ def get_color_map_theta(G,pos,lda,comp_type="COMP1",lumine=255,cmap="lch"):
 	pca.fit(theta)
 	theta_pca=pca.transform(theta)
 	reg_theta_pca=(theta_pca-theta_pca.min())/(theta_pca.max()-theta_pca.min())#0~1に正規化
-	h_values=circler_color_converter(reg_theta_pca*2*np.pi,0.2).T[0]#列ヴェクトルとして与えられるため，1行に変換
+	#h_values=circler_color_converter(reg_theta_pca*2*np.pi,0.2).T[0]#列ヴェクトルとして与えられるため，1行に変換
+	h_values=circler_color_converter(reg_theta_pca*2*np.pi,0.2+1).T[0]#列ヴェクトルとして与えられるため，1行に変換
 	make_lch_picker.draw_color_hist(h_values,resolution=50,lumine=lumine)#色変換の図を表示
 
 	if cmap=="lch":
@@ -153,7 +154,8 @@ def get_color_map_theta(G,pos,lda,comp_type="COMP1",lumine=255,cmap="lch"):
 			color_map[node_no]=html_color
 
 	elif cmap=="jet":
-		c_map=cm.jet
+		#c_map=cm.jet
+		c_map=cm.jet_r#環境によってPCAの値が反転する？ため，カラーマップを反転させて対応
 		file_id_dict_inv = {v:k for k, v in lda.file_id_dict.items()}#ファイル名とLDAでの文書番号(逆引き)．LDAの方に作っとけばよかった．．．
 		color_map={}
 		for serial_no,node_no in enumerate(G.node.keys()):
