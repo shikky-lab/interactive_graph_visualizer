@@ -280,8 +280,8 @@ def main(args):
 	params["search_word"]="iPhone"
 	params["max_page"]=400
 	params["K"]=10
-	#params["root_dir"]=ur"C:/Users/fukunaga/Desktop/collect_urls/search_"+params["search_word"]+"_"+unicode(params["max_page"])+"_add_childs"
-	params["root_dir"]=ur"C:/Users/LNLD/Desktop/collect_urls/search_"+params["search_word"]+"_"+unicode(params["max_page"])+"_add_childs"
+	params["root_dir"]=ur"C:/Users/fukunaga/Desktop/collect_urls/search_"+params["search_word"]+"_"+unicode(params["max_page"])+"_add_childs"
+	#params["root_dir"]=ur"C:/Users/LNLD/Desktop/collect_urls/search_"+params["search_word"]+"_"+unicode(params["max_page"])+"_add_childs"
 	params["target"]="myexttext"
 	params["is_largest"]=True
 	params["exp_name"]="k"+unicode(params["K"])+suffix_generator(params["target"],params["is_largest"])
