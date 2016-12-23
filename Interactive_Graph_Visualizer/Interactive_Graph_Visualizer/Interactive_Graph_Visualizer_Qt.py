@@ -202,20 +202,47 @@ class TopicGraph():
 		self.axes.axis([0,K+1,0,1])
 		self.canvas.draw()
 
+class SettingWidget(QtGui.QWidget):
+	def __init__(self,*args,**kwargs):
+		parent=kwargs.get("parent")
+		QtGui.QWidget.__init__(self ,parent=parent)
+
+		self.params=kwargs.get("params")
+
+		self.attr_weight_check=QtGui.QCheckBox("attr",self)
+		self.repl_weight_check=QtGui.QCheckBox("repl",self)
+
+		hbox = QtGui.QHBoxLayout()
+		hbox.addWidget(self.attr_weight_check)    #add canvs to the layout
+		hbox.addWidget(self.repl_weight_check)    #add canvs to the layout
+
+		vbox = QtGui.QHBoxLayout(self)
+		vbox.addLayout(hbox)
+		vbox.addStretch(1)
+
+		exp_dir=os.path.join(self.params["root_dir"],self.params["exp_name"])
+		src_pkl_name=self.params.get("src_pkl_name")
+		nx_dir=self.params.get("nx_dir")
+		with open(os.path.join(exp_dir,"instance.pkl")) as fi:
+		   self.lda=pickle.load(fi)
+		with open(os.path.join(nx_dir,src_pkl_name),"r") as fi:
+			self.G=pickle.load(fi)
+
 class AppForm(QtGui.QMainWindow):
 	def __init__(self,*args,**kwargs):#parent=None,params=None):
 		parent=kwargs.get("parent")
 		QtGui.QMainWindow.__init__(self, parent)
 		self.params=kwargs.get("params")
 
-		self.creat_main_window()
+		self.create_main_window()
 		self.forceGraph.on_draw()
 
-	def creat_main_window(self):
+	def create_main_window(self):
 		self.main_frame = QtGui.QWidget()
 		self.topicGraph = TopicGraph(self.main_frame,params=self.params)
 		self.verboseWidget=VerboseWidget(self.main_frame,params=self.params,topicGraph=self.topicGraph)
 		self.forceGraph = ForceGraph(self.main_frame,params=self.params,verboseWidget=self.verboseWidget)
+		#self.settingWidget=SettingWidget(self.main_frame,params=self.params)
 
 		#set layout
 		hbox = QtGui.QHBoxLayout()
@@ -230,6 +257,10 @@ class AppForm(QtGui.QMainWindow):
 		right_dock2 = QtGui.QDockWidget('Topics',self)
 		right_dock2.setWidget(self.topicGraph.canvas)
 		self.addDockWidget(Qt.Qt.RightDockWidgetArea, right_dock2)
+
+		#left_dock = QtGui.QDockWidget('Settings',self)
+		#left_dock.setWidget(self.settingWidget)
+		#self.addDockWidget(Qt.Qt.LeftDockWidgetArea, left_dock)
 
 		self.setCentralWidget(self.main_frame)
 
@@ -272,6 +303,8 @@ def main(args):
 		"do_rescale":True,#リスケールの有無
 		"with_label":False,#ラベルの付与の有無
 		#"size_attr":"a_score",#サイズの因子
+		#"size_attr":"h_score",#サイズの因子
+		#"size_attr":"in_degree",#サイズの因子
 		"size_attr":2000,
 		"cmap":"jet",#色の対応付け方法(カラーバー)
 

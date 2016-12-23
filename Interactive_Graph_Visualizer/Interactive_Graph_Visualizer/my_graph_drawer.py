@@ -137,6 +137,9 @@ def get_color_map_theta(G,pos,lda,comp_type="COMP1",lumine=255,cmap="lch"):
 	reg_theta_pca=(theta_pca-theta_pca.min())/(theta_pca.max()-theta_pca.min())#0~1に正規化
 	h_values=circler_color_converter(reg_theta_pca*2*np.pi,0.2).T[0]#列ヴェクトルとして与えられるため，1行に変換
 	make_lch_picker.draw_color_hist(h_values,resolution=50,lumine=lumine)#色変換の図を表示
+	pca2=decomposition.PCA(9)
+	pca2.fit(theta)
+	print pca2.explained_variance_ratio_
 
 	if cmap=="lch":
 		c_flt=1.0
@@ -257,25 +260,33 @@ def calc_nodesize(G,attr="a_score",min_size=1000,max_size=5000):
 		#print "all size uniformed"
 		return dict([(node_no,normal_size) for node_no in G.node])
 
-	a_scores,h_scores=nx.hits(G)
-	if attr=="a_score":
-		use_vals=a_scores
-	elif attr=="h_score":
-		use_vals=h_scores
-	else:
-		print "invalid attribute"
-		return
+	if attr=="a_score" or attr=="h_score":
+		a_scores,h_scores=nx.hits(G)#引数の順番違い．論文提出時にこっちで出してしまっていた．．．
+		#h_scores,a_scores=nx.hits(G)
+		if attr=="a_score":
+			use_vals=a_scores
+		elif attr=="h_score":
+			use_vals=h_scores
+
+	if attr=="in_degree":
+		use_vals=dict()
+		for g in G:
+			use_vals[g]=G.in_degree(g)
 
 	max_val=max(use_vals.values())
 	size_dict=dict()
 	for node_no,node_attr in G.nodes(data=True):
-		val=node_attr.get(attr)
+		#val=use_vals.get(node_no)
+		val=node_attr.get(attr)#論文提出時はauthorityをhubのmaxで割った
+		#if val != val2:
+		#	pass
 		if val==None:
 			size=min_size/2
 		else:
 			size=(val/max_val)*(max_size-min_size) + min_size
 		size_dict[node_no]=size
 	return size_dict
+
 
 def main(params):
 	root_dir=params.get("root_dir")
