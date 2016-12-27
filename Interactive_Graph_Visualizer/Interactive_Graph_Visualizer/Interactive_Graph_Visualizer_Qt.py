@@ -277,7 +277,7 @@ def suffix_generator(target=None,is_largest=False):
 
 def main(args):
 	params={}
-	params["search_word"]="iPhone"
+	params["search_word"]=u"千葉大学"
 	params["max_page"]=400
 	params["K"]=10
 	params["root_dir"]=ur"C:/Users/fukunaga/Desktop/collect_urls/search_"+params["search_word"]+"_"+unicode(params["max_page"])+"_add_childs"
@@ -291,8 +291,8 @@ def main(args):
 	params["weights_pkl_name"]="all_node_weights_"+params["comp_func_name"]+".gpkl"
 	params["draw_option"]={
 		#"weight_type":[],
-		"weight_type":["ATTR","REPUL"],
-		#"weight_type":["ATTR","REPUL","HITS"],#オーソリティかハブかはsize_attrで指定
+		#"weight_type":["ATTR","REPUL"],
+		"weight_type":["ATTR","REPUL","HITS"],#オーソリティかハブかはsize_attrで指定
 
 		"node_type":"COMP1",#ノード色の決定方法．
 		#REPR:代表トピックで着色
@@ -302,10 +302,10 @@ def main(args):
 
 		"do_rescale":True,#リスケールの有無
 		"with_label":False,#ラベルの付与の有無
-		#"size_attr":"a_score",#サイズの因子
+		"size_attr":"a_score",#サイズの因子
 		#"size_attr":"h_score",#サイズの因子
 		#"size_attr":"in_degree",#サイズの因子
-		"size_attr":2000,
+		#"size_attr":2000,
 		"cmap":"jet",#色の対応付け方法(カラーバー)
 
 		"lumine":200,#lchを用いる場合の輝度

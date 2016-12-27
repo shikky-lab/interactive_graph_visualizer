@@ -262,8 +262,8 @@ def calc_nodesize(G,attr="a_score",min_size=1000,max_size=5000):
 		return dict([(node_no,normal_size) for node_no in G.node])
 
 	if attr=="a_score" or attr=="h_score":
-		a_scores,h_scores=nx.hits(G)#引数の順番違い．論文提出時にこっちで出してしまっていた．．．
-		#h_scores,a_scores=nx.hits(G)
+		#a_scores,h_scores=nx.hits(G)#引数の順番違い．HCG論文提出時にこっちで出してしまっていた．．．
+		h_scores,a_scores=nx.hits(G)
 		if attr=="a_score":
 			use_vals=a_scores
 		elif attr=="h_score":
@@ -277,10 +277,7 @@ def calc_nodesize(G,attr="a_score",min_size=1000,max_size=5000):
 	max_val=max(use_vals.values())
 	size_dict=dict()
 	for node_no,node_attr in G.nodes(data=True):
-		#val=use_vals.get(node_no)
 		val=node_attr.get(attr)#論文提出時はauthorityをhubのmaxで割った
-		#if val != val2:
-		#	pass
 		if val==None:
 			size=min_size/2
 		else:
