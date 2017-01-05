@@ -18,6 +18,9 @@ import json
 
 import my_graph_drawer
 
+#ドラッグ初期位置格納用変数の宣言
+startx=0
+starty=0
 def zoom_factory(ax,base_scale = 2.):
 	def zoom_fun(event):
 		# get the current x and y limits
@@ -47,9 +50,43 @@ def zoom_factory(ax,base_scale = 2.):
 		ax.get_figure().canvas.draw()
 		#plt.draw() # force re-draw
 
+	def button_press_fun(event):
+		global startx
+		global starty
+		#左クリックの場合以外
+		if event.button != 1:
+			return
+
+		#ドラッグ開始の初期位置を取得
+		startx=event.xdata
+		starty=event.ydata
+
+	def drag_fun(event):
+		#左クリックしたまま移動した場合以外
+		if event.button != 1:
+			return
+
+		# get the current x and y limits
+		cur_xlim = ax.get_xlim()
+		cur_ylim = ax.get_ylim()
+		xdata = event.xdata # get event x location
+		ydata = event.ydata # get event y location
+
+		# set new limits
+		x_diff=xdata-startx
+		y_diff=ydata-starty
+		new_x_range=[cur_xlim[0]-x_diff,cur_xlim[1]-x_diff]
+		new_y_range=[cur_ylim[0]-y_diff,cur_ylim[1]-y_diff]
+		ax.set_xlim(new_x_range)
+		ax.set_ylim(new_y_range)
+		ax.get_figure().canvas.draw()
+		#plt.draw() # force re-draw
+
 	fig = ax.get_figure() # get the figure of interest
 	# attach the call back
 	fig.canvas.mpl_connect('scroll_event',zoom_fun)
+	fig.canvas.mpl_connect('motion_notify_event',drag_fun)
+	fig.canvas.mpl_connect('button_press_event',button_press_fun)
 
 	#return the function
 	return zoom_fun
