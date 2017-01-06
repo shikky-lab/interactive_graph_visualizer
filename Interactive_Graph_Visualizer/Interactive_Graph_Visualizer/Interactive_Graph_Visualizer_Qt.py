@@ -47,8 +47,8 @@ def zoom_factory(ax,base_scale = 2.):
 		new_y_range=[ydata - cur_y_rate*(cur_yrange*scale_factor), ydata + (1-cur_y_rate)*(cur_yrange*scale_factor)]
 		ax.set_xlim(new_x_range)
 		ax.set_ylim(new_y_range)
+
 		ax.get_figure().canvas.draw()
-		#plt.draw() # force re-draw
 
 	def button_press_fun(event):
 		global startx
@@ -91,6 +91,32 @@ def zoom_factory(ax,base_scale = 2.):
 	#return the function
 	return zoom_fun
 
+"""キー入力コールバック
+ノードサイズ変更はdpiを変えることで実装しているが，そのたびに全体のサイズが変わるため位置がずれる
+どうにも直せないので放置．そのため，あらかじめ適切なサイズに変更してからウィンドウ全体のサイズを変えて表示範囲を修正し，
+それからズームなどを行う必要がある．"""
+def key_press_factory(ax,qwidget):
+	def key_press_func(event):
+		fig = ax.get_figure() # get the figure of interest
+		if event.key == 'b':
+			dpi=fig.get_dpi()
+			fig.set_dpi(dpi+10)
+		if event.key == 'B':
+			dpi=fig.get_dpi()
+			if dpi-10>0:
+				fig.set_dpi(dpi-10)
+		if event.key == 'x':
+			print "parent:",fig.canvas.parentWidget().size()
+			print "canvas:",fig.canvas.size()
+			print "w_h:",fig.canvas.get_width_height()
+		fig.canvas.draw()
+
+	fig = ax.get_figure() # get the figure of interest
+	fig.canvas.setFocusPolicy( QtCore.Qt.ClickFocus )#key_press_eventをセットする前にこの2行が必要
+	fig.canvas.setFocus()
+	fig.canvas.mpl_connect('key_press_event',key_press_func)
+	return key_press_func
+
 class ForceGraph():
 	def __init__(self,*args,**kwargs):
 		parent=kwargs.get("parent")
@@ -101,11 +127,12 @@ class ForceGraph():
 		self.dpi = 20
 		self.fig = Figure((5,4), dpi=self.dpi)
 		self.canvas = FigureCanvas(self.fig)    #pass a figure to the canvas
-		self.canvas.setParent(parent)
+		#self.canvas.setParent(parent)
 
 		"""plt画面に関する設定"""
 		self.axes = self.fig.add_subplot(111)
 		zoom_factory(self.axes,base_scale=2.)
+		key_press_factory(self.axes,args[0])
 		self.fig.set_facecolor('w')
 		self.axes.axis('equal')#両軸を同じスケールに
 
