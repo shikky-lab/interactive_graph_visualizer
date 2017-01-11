@@ -120,8 +120,6 @@ def draw_color_hist(h_values,resolution=50,lumine=255):
 
 	plt.figure(current_figre.number)#pyplotの出力を関数に入る前のものに戻す
 
-
-
 if __name__=="__main__":
 	#fig=plt.figure()
 	#ax = fig.add_subplot(111,axisbg='Azure') # add subplot background colour

@@ -31,6 +31,8 @@ Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "JS_Visualizer", "http://loc
 		DefaultWebSiteLanguage = "Visual Basic"
 	EndProjectSection
 EndProject
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "Data_Analizer", "Data_Analizer\Data_Analizer.pyproj", "{B090B8D8-4485-482D-8115-302F8DF1710B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -77,6 +79,14 @@ Global
 		{F530A671-ACC1-4C27-86CD-94376BA9D25F}.Release|ARM.ActiveCfg = Debug|Any CPU
 		{F530A671-ACC1-4C27-86CD-94376BA9D25F}.Release|x64.ActiveCfg = Debug|Any CPU
 		{F530A671-ACC1-4C27-86CD-94376BA9D25F}.Release|x86.ActiveCfg = Debug|Any CPU
+		{B090B8D8-4485-482D-8115-302F8DF1710B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B090B8D8-4485-482D-8115-302F8DF1710B}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{B090B8D8-4485-482D-8115-302F8DF1710B}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{B090B8D8-4485-482D-8115-302F8DF1710B}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{B090B8D8-4485-482D-8115-302F8DF1710B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B090B8D8-4485-482D-8115-302F8DF1710B}.Release|ARM.ActiveCfg = Release|Any CPU
+		{B090B8D8-4485-482D-8115-302F8DF1710B}.Release|x64.ActiveCfg = Release|Any CPU
+		{B090B8D8-4485-482D-8115-302F8DF1710B}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
