@@ -136,7 +136,7 @@ def get_color_map_theta(G,pos,lda,comp_type="COMP1",lumine=255,cmap="lch"):
 	theta_pca=pca.transform(theta)
 	reg_theta_pca=(theta_pca-theta_pca.min())/(theta_pca.max()-theta_pca.min())#0~1に正規化
 	h_values=circler_color_converter(reg_theta_pca*2*np.pi,0.2).T[0]#列ヴェクトルとして与えられるため，1行に変換
-	make_lch_picker.draw_color_hist(h_values,resolution=50,lumine=lumine)#色変換の図を表示
+	make_lch_picker.draw_color_hist(h_values,resolution=50,lumine=lumine,color_map=cmap)#色変換の図を表示
 	pca2=decomposition.PCA(9)
 	pca2.fit(theta)
 	print pca2.explained_variance_ratio_

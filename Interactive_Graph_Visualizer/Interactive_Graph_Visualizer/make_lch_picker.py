@@ -98,7 +98,7 @@ def draw_colorbar(ax,range_x=[0,1],resolution=50,lumine=255,color_map="lch"):
 	#ax.set_yticklabels([])
 	ax.axis("off")
 
-def draw_color_hist(h_values,resolution=50,lumine=255):
+def draw_color_hist(h_values,resolution=50,lumine=255,color_map="lch"):
 	"""
 	h_values:正規化した1次元の配列
 	カラーバーを添えたヒストグラムを出力
@@ -114,7 +114,7 @@ def draw_color_hist(h_values,resolution=50,lumine=255):
 
 	"""カラーバーの描画"""
 	ax_colorbar = fig.add_axes((0.1,0,1,0.2),sharex=ax,axisbg='w')       # background colour
-	draw_colorbar(ax_colorbar,range_x=[h_values.min(),h_values.max()],resolution=2*resolution,lumine=lumine,color_map="jet")
+	draw_colorbar(ax_colorbar,range_x=[h_values.min(),h_values.max()],resolution=2*resolution,lumine=lumine,color_map=color_map)
 
 	ax.set_xticklabels([])
 

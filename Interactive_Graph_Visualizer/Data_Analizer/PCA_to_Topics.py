@@ -29,12 +29,25 @@ def circler_color_converter(values,start_angle):
 	np.where(values<2*np.pi,values,values-2*np.pi)
 	return values
 
-"""上記関数の逆変換"""
+"""上記関数の逆変換.jetの場合は不要"""
 def circler_color_deconverter(values,start_angle):
 	values=values-start_angle*np.pi
 	np.where(values>=0,values,values+2*np.pi)
 	values=values/(2*np.pi)
 	return values
+
+def calc_composite_worddists(lda,pca,theta_pca):
+	#steps = np.linspace(0, 1, 50)  
+	steps = np.linspace(theta_pca.min(), theta_pca.max(), 50)  
+	theta=lda.theta()[:len(lda.docs)]
+	fig=plt.figure()
+	ax = fig.add_subplot(111)
+	ax.scatter(theta_pca,theta_pca)
+	for step in steps:
+		pass
+
+	#pca_domain_value
+
 
 def get_color_map_theta(lda,comp_type="COMP1",lumine=255,cmap="lch"):
 	"""thetaの方を主成分分析で1次元にして彩色"""
@@ -44,15 +57,10 @@ def get_color_map_theta(lda,comp_type="COMP1",lumine=255,cmap="lch"):
 	pca.fit(theta)
 	theta_pca=pca.transform(theta)
 	reg_theta_pca=(theta_pca-theta_pca.min())/(theta_pca.max()-theta_pca.min())#0~1に正規化
-	h_values=circler_color_converter(reg_theta_pca,0.2)#.T[0]#列ヴェクトルとして与えられるため，1行に変換
-	re_values=circler_color_deconverter(h_values,0.2)
 
-	print "org:",reg_theta_pca[:10]
-	print "re:",re_values[:10]
-
-	pass
-
-	#make_lch_picker.draw_color_hist(h_values,resolution=50,lumine=lumine)#色変換の図を表示
+	
+	calc_composite_worddists(lda,pca,theta_pca)
+	#make_lch_picker.draw_color_hist(h_values,resolution=50,lumine=lumine,color_map=cmap)#色変換の図を表示
 
 	#pca2=decomposition.PCA(10)
 	#pca2.fit(theta)
