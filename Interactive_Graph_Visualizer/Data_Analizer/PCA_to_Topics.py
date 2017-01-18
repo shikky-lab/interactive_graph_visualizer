@@ -15,6 +15,8 @@ import LDA_PCA
 import make_lch_picker
 import cv2
 from sklearn import decomposition
+import xlsxwriter
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 """
 やりたいこと
@@ -36,44 +38,73 @@ def circler_color_deconverter(values,start_angle):
 	values=values/(2*np.pi)
 	return values
 
-def calc_composite_worddists(lda,pca,theta_pca):
+def calc_composite_thetas(lda,pca,theta_pca):
 	#steps = np.linspace(0, 1, 50)  
-	steps = np.linspace(theta_pca.min(), theta_pca.max(), 50)  
-	theta=lda.theta()[:len(lda.docs)]
-	fig=plt.figure()
-	ax = fig.add_subplot(111)
-	ax.scatter(theta_pca,theta_pca)
-	for step in steps:
-		pass
+	steps = np.linspace(theta_pca.min(), theta_pca.max(), 10)  
+	#theta=lda.theta()[:len(lda.docs)]
 
-	#pca_domain_value
+	"""
+	主成分分析結果から元のトピック分布を再計算
+	理論的には範囲内に収まるはずだが，なぜか負の値を持つことがあるため0~1に収まるように正規化
+	"""
+	#molecs=pca.inverse_transform(theta_pca)-pca.inverse_transform(theta_pca).min(axis=1)[np.newaxis].T+lda.alpha
+	#rev_theta=molecs/molecs.sum(axis=1)[np.newaxis].T
 
+	molecs=pca.inverse_transform(steps[np.newaxis].T)-pca.inverse_transform(steps[np.newaxis].T).min(axis=1)[np.newaxis].T+lda.alpha
+	rev_thetas=molecs/molecs.sum(axis=1)[np.newaxis].T
 
-def get_color_map_theta(lda,comp_type="COMP1",lumine=255,cmap="lch"):
+	#with open("rev_thetas.csv","w") as fo:
+	#	for rev_theta in rev_thetas:
+	#		for val in rev_theta:
+	#			print>>fo,val,
+	#		print>>fo,""
+
+	return rev_thetas
+
+def output_worddist(lda,word_dists,dir_path="."):
+	uni_docs=[]
+	for word_dist in word_dists:
+		uni_words=u""
+		for word_id in np.argsort(-word_dist)[:100]:
+			uni_words+=lda.vocas[word_id].decode("utf8")#.encode("sjis")
+			uni_words+=u" "
+		uni_docs.append(uni_words)
+
+	vectorizer = TfidfVectorizer(use_idf=True)
+	tfidf = vectorizer.fit(uni_docs)
+	features=tfidf.transform(uni_docs).toarray()
+	terms=tfidf.get_feature_names()
+
+	book=xlsxwriter.Workbook(os.path.join(dir_path,"words.xlsx"))
+	sheet=book.add_worksheet("words")
+	for col,feature in enumerate(features):
+		for row,word_id in enumerate(np.argsort(-feature)[:20]):
+			str_word=terms[word_id].encode("utf8")
+			sheet.write(row,col,str_word)
+	
+	book.close()
+
+def calc_composite_worddist(lda,comp_type="COMP1",lumine=255,cmap="lch"):
 	"""thetaの方を主成分分析で1次元にして彩色"""
 	theta=lda.theta()[:len(lda.docs)]
 
 	pca=decomposition.PCA(1)
 	pca.fit(theta)
 	theta_pca=pca.transform(theta)
-	reg_theta_pca=(theta_pca-theta_pca.min())/(theta_pca.max()-theta_pca.min())#0~1に正規化
+	#theta_pca=pca.transform(pca.inverse_transform(theta_pca))#1回の投影ではなぜか値がずれるため再投影...してみたが，特に変わらなかった
 
+	#reg_theta_pca=(theta_pca-theta_pca.min())/(theta_pca.max()-theta_pca.min())#0~1に正規化
 	
-	calc_composite_worddists(lda,pca,theta_pca)
-	#make_lch_picker.draw_color_hist(h_values,resolution=50,lumine=lumine,color_map=cmap)#色変換の図を表示
-
-	#pca2=decomposition.PCA(10)
-	#pca2.fit(theta)
-	#print pca2.explained_variance_ratio_
-
-	#return color_map
+	rev_thetas=calc_composite_thetas(lda,pca,theta_pca)
+	word_dists=rev_thetas.dot(lda.phi())
+	output_worddist(lda,word_dists)
 
 def main(params):
 	root_dir=params.get("root_dir")
 	exp_name=params.get("exp_name")
-	nx_dir=params.get("nx_dir")
-	src_pkl_name=params.get("src_pkl_name")
-	weights_pkl_name=params.get("weights_pkl_name")
+	#nx_dir=params.get("nx_dir")
+	#src_pkl_name=params.get("src_pkl_name")
+	#weights_pkl_name=params.get("weights_pkl_name")
 	draw_option=params.get("draw_option")
 	lumine=draw_option.get("lumine")
 	cmap=draw_option.get("cmap")
@@ -83,8 +114,8 @@ def main(params):
 	with open(os.path.join(exp_dir,"instance.pkl")) as fi:
 	   lda=pickle.load(fi)
 
-	get_color_map_theta(lda,comp_type,lumine=lumine,cmap=cmap)
-	#color_map=get_color_map_theta(lda,comp_type,lumine=lumine,cmap=cmap)
+	calc_composite_worddist(lda,comp_type,lumine=lumine,cmap=cmap)
+
 
 def suffix_generator(target=None,is_largest=False):
 	suffix=""
@@ -107,7 +138,7 @@ if __name__ == "__main__":
 	params["comp_func_name"]="comp4_2"
 	params["nx_dir"]=os.path.join(os.path.join(params["root_dir"],params["exp_name"]),"nx_datas")
 	params["src_pkl_name"]="G_with_params_"+params["comp_func_name"]+".gpkl"
-	params["weights_pkl_name"]="all_node_weights_"+params["comp_func_name"]+".gpkl"
+	#params["weights_pkl_name"]="all_node_weights_"+params["comp_func_name"]+".gpkl"
 	draw_option={
 		"comp_func_name":params["comp_func_name"],
 		#"weight_type":[],
