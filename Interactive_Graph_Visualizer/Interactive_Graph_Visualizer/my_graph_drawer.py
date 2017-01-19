@@ -137,7 +137,7 @@ def get_color_map_theta(G,pos,lda,comp_type="COMP1",lumine=255,cmap="lch"):
 	reg_theta_pca=(theta_pca-theta_pca.min())/(theta_pca.max()-theta_pca.min())#0~1に正規化
 	h_values=circler_color_converter(reg_theta_pca*2*np.pi,0.2).T[0]#列ヴェクトルとして与えられるため，1行に変換
 	make_lch_picker.draw_color_hist(h_values,resolution=50,lumine=lumine,color_map=cmap)#色変換の図を表示
-	pca2=decomposition.PCA(9)
+	pca2=decomposition.PCA(lda.K)
 	pca2.fit(theta)
 	print pca2.explained_variance_ratio_
 
@@ -156,8 +156,8 @@ def get_color_map_theta(G,pos,lda,comp_type="COMP1",lumine=255,cmap="lch"):
 			color_map[node_no]=html_color
 
 	elif cmap=="jet":
-		c_map=cm.jet
-		#c_map=cm.jet_r#環境によってPCAの値が反転する？ため，カラーマップを反転させて対応
+		#c_map=cm.jet
+		c_map=cm.jet_r#環境によってPCAの値が反転する？ため，カラーマップを反転させて対応
 		file_id_dict_inv = {v:k for k, v in lda.file_id_dict.items()}#ファイル名とLDAでの文書番号(逆引き)．LDAの方に作っとけばよかった．．．
 		color_map={}
 		for serial_no,node_no in enumerate(G.node.keys()):
@@ -190,8 +190,8 @@ def draw_node_with_lch(G,pos,**kwargs):
 	elif color_map_by==None:
 		node_color=["#FFFFFF"]*len(G.node)
 	size_array=size.values()
-	nx.draw_networkx_nodes(G,pos=pos,node_color=node_color,node_size=size_array,ax=ax,pick_func=pick_func)
-	return color_map
+	node_collection=nx.draw_networkx_nodes(G,pos=pos,node_color=node_color,node_size=size_array,ax=ax,pick_func=pick_func)
+	return node_collection,color_map
 
 """トピック分布から色を1色決定し，lchの形で返す"""
 def theta_to_lch(theta_d,h_values,comp_type="COMP1",l=100):
@@ -233,18 +233,18 @@ def draw_network(G,pos,**kwargs):
 		color_map=nx.get_node_attributes(G,"color")
 		size_array=size.values()
 		#nx.draw(G,pos=pos,with_labels=True)#with_labelsは各ノードのラベル表示.この関数事体を呼ばずに下二つを呼ぶと軸ラベルがつく．内部的にはいろいろ処理した後下二つを呼んでる
-		nx.draw_networkx_nodes(G,pos=pos,node_color=color_map.values(),node_size=size_array,ax=ax);
+		node_collection=nx.draw_networkx_nodes(G,pos=pos,node_color=color_map.values(),node_size=size_array,ax=ax);
 		#nx.draw_networkx_edges(G,pos,font_size=int(12*100/dpi))
 	elif node_type=="PIE":
 		draw_node_with_pie(G,pos,lda,size)
 		#draw_axis(xstep=0.2,ystep=0.2)#なぜか上処理で軸が消えてしまうため書き直す
 	elif node_type=="REPR2" or node_type=="COMP1" or node_type=="COMP2":
-		color_map=draw_node_with_lch(G,pos,**kwargs)
+		node_collection,color_map=draw_node_with_lch(G,pos,**kwargs)
 
 	nx.draw_networkx_edges(G,pos,ax=ax)
 	#if with_label==True:
 	#	nx.draw_networkx_labels(G,pos,font_size=int(12*100/dpi))
-	return color_map
+	return node_collection,color_map
 
 """オプションを読みやすい形式で保存.前処理をしてから渡す"""
 def save_drawoption(param_dict,path):
@@ -350,7 +350,12 @@ def main(params):
 			"lda":lda,
 			"draw_option":draw_option
 		}
-	draw_network(G,pos,**draw_kwargs)
+	node_collection,color_map=draw_network(G,pos,**draw_kwargs)
+
+	plot_datas={
+			"node_collection":node_collection
+		}
+	return plot_datas
 
 	#"""ネットワークの再保存"""
 	#if new_color_map is not None:#カラーマップの更新

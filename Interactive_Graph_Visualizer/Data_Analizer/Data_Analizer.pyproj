@@ -25,6 +25,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="PCA_to_Topics.py" />
+    <Compile Include="tooltip_test.py">
+      <SubType>
+      </SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Content Include="readme.txt" />

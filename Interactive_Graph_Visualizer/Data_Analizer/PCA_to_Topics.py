@@ -61,7 +61,19 @@ def calc_composite_thetas(lda,pca,theta_pca):
 
 	return rev_thetas
 
-def output_worddist(lda,word_dists,dir_path="."):
+
+def output_worddist_lda(lda,word_dists,dir_path="."):
+	book=xlsxwriter.Workbook(os.path.join(dir_path,"words.xlsx"))
+	sheet=book.add_worksheet("words")
+	for col,word_dist in enumerate(word_dists):
+		col*=2
+		for row,word_id in enumerate(np.argsort(-word_dist)[:100]):
+			str_word=lda.vocas[word_id]#.decode("utf8")#.encode("sjis")
+			sheet.write(row,col,str_word)
+			sheet.write(row,col+1,word_dist[word_id])
+	book.close()
+
+def output_worddist_tfidf(lda,word_dists,dir_path="."):
 	uni_docs=[]
 	for word_dist in word_dists:
 		uni_words=u""
@@ -91,13 +103,13 @@ def calc_composite_worddist(lda,comp_type="COMP1",lumine=255,cmap="lch"):
 	pca=decomposition.PCA(1)
 	pca.fit(theta)
 	theta_pca=pca.transform(theta)
-	#theta_pca=pca.transform(pca.inverse_transform(theta_pca))#1回の投影ではなぜか値がずれるため再投影...してみたが，特に変わらなかった
+	theta_pca=pca.transform(pca.inverse_transform(theta_pca))#1回の投影ではなぜか値がずれるため再投影...してみたが，特に変わらなかった
 
 	#reg_theta_pca=(theta_pca-theta_pca.min())/(theta_pca.max()-theta_pca.min())#0~1に正規化
 	
 	rev_thetas=calc_composite_thetas(lda,pca,theta_pca)
 	word_dists=rev_thetas.dot(lda.phi())
-	output_worddist(lda,word_dists)
+	output_worddist_lda(lda,word_dists)
 
 def main(params):
 	root_dir=params.get("root_dir")

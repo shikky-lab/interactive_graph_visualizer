@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import sys
 import os
+import copy
 
 #import numpy as np
 from PyQt4 import QtGui
@@ -19,9 +20,8 @@ import json
 import my_graph_drawer
 
 #ドラッグ初期位置格納用変数の宣言
-startx=0
-starty=0
-def zoom_factory(ax,base_scale = 2.):
+def zoom_factory(ax,base_scale = 2.,startX=0,starty=0):
+	global plot_datas
 	def zoom_fun(event):
 		# get the current x and y limits
 		cur_xlim = ax.get_xlim()
@@ -30,12 +30,15 @@ def zoom_factory(ax,base_scale = 2.):
 		cur_yrange = (cur_ylim[1] - cur_ylim[0])
 		xdata = event.xdata # get event x location
 		ydata = event.ydata # get event y location
+		sizes=plot_datas["node_collection"].get_sizes()
 		if event.button == 'up':
 			# deal with zoom in
 			scale_factor = 1/base_scale
+			plot_datas["node_collection"].set_sizes(sizes*base_scale)
 		elif event.button == 'down':
 			# deal with zoom out
 			scale_factor = base_scale
+			plot_datas["node_collection"].set_sizes(sizes/base_scale)
 		else:
 			# deal with something that should never happen
 			scale_factor = 1
@@ -62,6 +65,8 @@ def zoom_factory(ax,base_scale = 2.):
 		starty=event.ydata
 
 	def drag_fun(event):
+		global startx
+		global starty
 		#左クリックしたまま移動した場合以外
 		if event.button != 1:
 			return
@@ -91,20 +96,24 @@ def zoom_factory(ax,base_scale = 2.):
 	#return the function
 	return zoom_fun
 
-"""キー入力コールバック
-ノードサイズ変更はdpiを変えることで実装しているが，そのたびに全体のサイズが変わるため位置がずれる
-どうにも直せないので放置．そのため，あらかじめ適切なサイズに変更してからウィンドウ全体のサイズを変えて表示範囲を修正し，
-それからズームなどを行う必要がある．"""
+"""
+キー入力コールバック
+b:ノードサイズを倍に
+B:ノードサイズを半分に
+"""
 def key_press_factory(ax,qwidget):
+	global plot_datas
+	global initial_plot_datas
 	def key_press_func(event):
 		fig = ax.get_figure() # get the figure of interest
+		sizes=plot_datas["node_collection"].get_sizes()
 		if event.key == 'b':
-			dpi=fig.get_dpi()
-			fig.set_dpi(dpi+10)
+			plot_datas["node_collection"].set_sizes(sizes*2)
 		if event.key == 'B':
-			dpi=fig.get_dpi()
-			if dpi-10>0:
-				fig.set_dpi(dpi-10)
+			plot_datas["node_collection"].set_sizes(sizes/2)
+		if event.key == 'i':#描画初期化
+			initial_sizes=initial_plot_datas["node_sizes"]
+			plot_datas["node_collection"].set_sizes(initial_sizes)
 		if event.key == 'x':
 			print "parent:",fig.canvas.parentWidget().size()
 			print "canvas:",fig.canvas.size()
@@ -117,6 +126,8 @@ def key_press_factory(ax,qwidget):
 	fig.canvas.mpl_connect('key_press_event',key_press_func)
 	return key_press_func
 
+initial_plot_datas={}
+plot_datas={}
 class ForceGraph():
 	def __init__(self,*args,**kwargs):
 		parent=kwargs.get("parent")
@@ -145,8 +156,11 @@ class ForceGraph():
 			self.G=pickle.load(fi)
 
 	def on_draw(self):
+		global plot_datas
+		global initial_plot_datas
 		self.axes.clear()
-		my_graph_drawer.main(self.params)
+		plot_datas=my_graph_drawer.main(self.params)
+		initial_plot_datas["node_sizes"]=plot_datas["node_collection"].get_sizes()
 		self.canvas.draw()
 
 	def pick_func(self,event):
@@ -341,7 +355,7 @@ def suffix_generator(target=None,is_largest=False):
 
 def main(args):
 	params={}
-	params["search_word"]=u"千葉大学"
+	params["search_word"]=u"iPhone"
 	params["max_page"]=400
 	params["K"]=10
 	params["root_dir"]=ur"C:/Users/fukunaga/Desktop/collect_urls/search_"+params["search_word"]+"_"+unicode(params["max_page"])+"_add_childs"
@@ -355,8 +369,8 @@ def main(args):
 	params["weights_pkl_name"]="all_node_weights_"+params["comp_func_name"]+".gpkl"
 	params["draw_option"]={
 		#"weight_type":[],
-		#"weight_type":["ATTR","REPUL"],
-		"weight_type":["ATTR","REPUL","HITS"],#オーソリティかハブかはsize_attrで指定
+		"weight_type":["ATTR","REPUL"],
+		#"weight_type":["ATTR","REPUL","HITS"],#オーソリティかハブかはsize_attrで指定
 
 		"node_type":"COMP1",#ノード色の決定方法．
 		#REPR:代表トピックで着色
