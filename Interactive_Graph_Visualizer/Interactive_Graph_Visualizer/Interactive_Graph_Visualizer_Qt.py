@@ -100,6 +100,8 @@ def zoom_factory(ax,base_scale = 2.,startX=0,starty=0):
 キー入力コールバック
 b:ノードサイズを倍に
 B:ノードサイズを半分に
+i:初期状態に戻す
+s:現在の描画を保存
 """
 def key_press_factory(ax,qwidget):
 	global plot_datas
@@ -114,10 +116,8 @@ def key_press_factory(ax,qwidget):
 		if event.key == 'i':#描画初期化
 			initial_sizes=initial_plot_datas["node_sizes"]
 			plot_datas["node_collection"].set_sizes(initial_sizes)
-		if event.key == 'x':
-			print "parent:",fig.canvas.parentWidget().size()
-			print "canvas:",fig.canvas.size()
-			print "w_h:",fig.canvas.get_width_height()
+		if event.key == 's':
+			fig.savefig("graph_figure.png")
 		fig.canvas.draw()
 
 	fig = ax.get_figure() # get the figure of interest
@@ -359,6 +359,7 @@ def main(args):
 	params["max_page"]=400
 	params["K"]=10
 	params["root_dir"]=ur"C:/Users/fukunaga/Desktop/collect_urls/search_"+params["search_word"]+"_"+unicode(params["max_page"])+"_add_childs"
+	#params["root_dir"]=ur"C:/Users/fukunaga/Desktop/collect_urls/search_"+params["search_word"]+"_"+unicode(params["max_page"])+"_add_childs"
 	#params["root_dir"]=ur"C:/Users/LNLD/Desktop/collect_urls/search_"+params["search_word"]+"_"+unicode(params["max_page"])+"_add_childs"
 	params["target"]="myexttext"
 	params["is_largest"]=True
@@ -369,8 +370,8 @@ def main(args):
 	params["weights_pkl_name"]="all_node_weights_"+params["comp_func_name"]+".gpkl"
 	params["draw_option"]={
 		#"weight_type":[],
-		"weight_type":["ATTR","REPUL"],
-		#"weight_type":["ATTR","REPUL","HITS"],#オーソリティかハブかはsize_attrで指定
+		#"weight_type":["ATTR","REPUL"],
+		"weight_type":["ATTR","REPUL","HITS"],#オーソリティかハブかはsize_attrで指定
 
 		"node_type":"COMP1",#ノード色の決定方法．
 		#REPR:代表トピックで着色
@@ -380,8 +381,8 @@ def main(args):
 
 		"do_rescale":True,#リスケールの有無
 		"with_label":False,#ラベルの付与の有無
-		"size_attr":"a_score",#サイズの因子
-		#"size_attr":"h_score",#サイズの因子
+		#"size_attr":"a_score",#サイズの因子
+		"size_attr":"h_score",#サイズの因子
 		#"size_attr":"in_degree",#サイズの因子
 		#"size_attr":2000,
 		"cmap":"jet",#色の対応付け方法(カラーバー)

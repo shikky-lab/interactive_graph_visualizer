@@ -6,7 +6,7 @@ import os.path
 import cPickle as pickle
 import matplotlib.pyplot as plt
 import matplotlib
-#import matplotlib.cm as cm
+import matplotlib.cm as cm
 from LDA_kai import LDA
 from math import modf#整数と小数の分離
 #import matplotlib.font_manager
@@ -73,7 +73,15 @@ def output_worddist_lda(lda,word_dists,dir_path="."):
 			sheet.write(row,col+1,word_dist[word_id])
 	book.close()
 
+def cvtRGBAflt2HTML(rgba):
+	if isinstance(rgba, tuple):
+		rgba=np.array(rgba)
+	rgb=rgba[:3]
+	rgb_uint=(rgb*255).astype(np.uint8)
+	return LDA_PCA.cvtRGB_to_HTML(rgb_uint)
+
 def output_worddist_tfidf(lda,word_dists,dir_path="."):
+	c_map=cm.jet_r#環境によってPCAの値が反転する？ため，カラーマップを反転させて対応
 	uni_docs=[]
 	for word_dist in word_dists:
 		uni_words=u""
@@ -82,18 +90,72 @@ def output_worddist_tfidf(lda,word_dists,dir_path="."):
 			uni_words+=u" "
 		uni_docs.append(uni_words)
 
-	vectorizer = TfidfVectorizer(use_idf=True)
+	vectorizer = TfidfVectorizer(use_idf=True,lowercase=False)
 	tfidf = vectorizer.fit(uni_docs)
 	features=tfidf.transform(uni_docs).toarray()
 	terms=tfidf.get_feature_names()
 
+	output_topn(terms,features,dir_path=dir_path,topn=20)
+
+def output_worddist_lda_tfidf(lda,word_dists,dir_path="."):
+	uni_docs=[]
+	org_word_to_plb_list=[]#ユニコード単語をキーに確率を引く辞書のリスト．後で復元する際に使う．
+	for word_dist in word_dists:
+		org_word_to_plb={}
+		uni_words=u""
+		for word_id in np.argsort(-word_dist)[:100]:
+			uni_words+=lda.vocas[word_id].decode("utf8")#.encode("sjis")
+			uni_words+=u" "
+			org_word_to_plb[lda.vocas[word_id].decode("utf8")]=word_dist[word_id]
+		uni_docs.append(uni_words)
+		org_word_to_plb_list.append(org_word_to_plb)
+
+	vectorizer = TfidfVectorizer(use_idf=True,lowercase=False)
+	tfidf = vectorizer.fit(uni_docs)
+	features=tfidf.transform(uni_docs).toarray()
+	terms=tfidf.get_feature_names()
+
+	for feature,org_word_to_plb_ in zip(features,org_word_to_plb_list):
+		for i,term in enumerate(terms):
+			if feature[i] == 0.:
+				continue
+			feature[i]=feature[i]*org_word_to_plb_[term]
+
+	output_topn(terms,features,dir_path=dir_path,topn=50)
+
+def output_topn(terms,features,dir_path=".",topn=20):
+	c_map=cm.jet_r#環境によってPCAの値が反転する？ため，カラーマップを反転させて対応
+	steps = np.linspace(0., 1., len(features))  
 	book=xlsxwriter.Workbook(os.path.join(dir_path,"words.xlsx"))
 	sheet=book.add_worksheet("words")
+	bold = book.add_format({'bold': True})
 	for col,feature in enumerate(features):
-		for row,word_id in enumerate(np.argsort(-feature)[:20]):
+		for row,word_id in enumerate(np.argsort(-feature)[:topn]):
+			flag_cnt=0
+			if col==0:
+				flag_cnt+=1
+			else:
+				pre_rank=np.argsort(-features[col-1])[:100]
+				pre_rank=np.where(pre_rank==word_id)[0]
+				if len(pre_rank) == 0 or pre_rank[0]>row:
+					flag_cnt+=1
+			if col==(len(features)-1):
+				flag_cnt+=1
+			else:
+				nx_rank=np.argsort(-features[col+1])[:100]
+				nx_rank=np.where(nx_rank==word_id)[0]
+				if len(nx_rank) == 0 or nx_rank[0]>row:
+					flag_cnt+=1
+					
 			str_word=terms[word_id].encode("utf8")
-			sheet.write(row,col,str_word)
-	
+			if flag_cnt>=2:
+				sheet.write(row,col,str_word,bold)
+			else:
+				sheet.write(row,col,str_word)
+		c_format=book.add_format()
+		c_format.set_pattern(1)
+		c_format.set_bg_color(cvtRGBAflt2HTML(c_map(steps[col])))
+		sheet.write(row+1,col,"",c_format)
 	book.close()
 
 def calc_composite_worddist(lda,comp_type="COMP1",lumine=255,cmap="lch"):
@@ -109,7 +171,9 @@ def calc_composite_worddist(lda,comp_type="COMP1",lumine=255,cmap="lch"):
 	
 	rev_thetas=calc_composite_thetas(lda,pca,theta_pca)
 	word_dists=rev_thetas.dot(lda.phi())
-	output_worddist_lda(lda,word_dists)
+	#output_worddist_lda(lda,word_dists)
+	output_worddist_tfidf(lda,word_dists)
+	#output_worddist_lda_tfidf(lda,word_dists)
 
 def main(params):
 	root_dir=params.get("root_dir")
@@ -139,7 +203,7 @@ def suffix_generator(target=None,is_largest=False):
 
 if __name__ == "__main__":
 	params={}
-	params["search_word"]="iPhone"
+	params["search_word"]=u"iPhone"
 	params["max_page"]=400
 	params["K"]=10
 	params["root_dir"]=ur"C:/Users/fukunaga/Desktop/collect_urls/search_"+params["search_word"]+"_"+unicode(params["max_page"])+"_add_childs"
