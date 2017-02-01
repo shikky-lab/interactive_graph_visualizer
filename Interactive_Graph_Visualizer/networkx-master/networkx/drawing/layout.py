@@ -225,7 +225,7 @@ def shell_layout(G, nlist=None, scale=1, center=None, dim=2):
 def fruchterman_reingold_layout(G, k=None,
 								pos=None,
 								fixed=None,
-								iterations=50,
+								iterations=200,
 								weight='weight',
 								scale=1.0,
 								center=None,
@@ -457,6 +457,14 @@ def _fruchterman_reingold_revised(A,all_node_weights, k=None, pos=None, fixed=No
 									(lamb*(k * k*hits_comp/ ((distance**2)*all_node_weights_) ) - (1-lamb)*A_ * distance / (k*hits_comp))
 									).sum(axis=1)
 
+	def displacement_func3_with_HITS_beta(delta,k,distance,hits_scores,all_node_weights_,A_,lamb=0.5):
+		"""HITSの結果を組み込む．いまいち過去のコードの意図がわからないが，スコアの低いものをもっと寄せてみる"""
+		hits_comp=(hits_scores-1)/3+0.5#0~1に正規化+0.5で0.5~1.5
+
+		return np.transpose(np.transpose(delta) *
+									(lamb*(k * k*hits_comp/ ((distance**2)*all_node_weights_) ) - (1-lamb)*A_ * distance / (k*hits_comp))
+									).sum(axis=1)
+
 	try:
 		import numpy as np
 	except ImportError:
@@ -509,7 +517,7 @@ def _fruchterman_reingold_revised(A,all_node_weights, k=None, pos=None, fixed=No
 		
 		# displacement "force"
 		if hits_scores is None:
-			lamb=0.6#斥力と引力をかける割合．大きいほど斥力重視
+			lamb=0.5#斥力と引力をかける割合．大きいほど斥力重視
 			displacement=displacement_func3(delta,k,distance,all_node_weights_=all_node_weights_,A_=A_,lamb=lamb)
 		else:
 			lamb=0.5#斥力と引力をかける割合．大きいほど斥力重視

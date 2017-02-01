@@ -213,8 +213,8 @@ class VerboseWidget(QtGui.QWidget):
 			#"len(text)",
 			["url",u"url"],
 			["domain",u"ドメイン"],
-			#"len_parents",
-			["len_childs",u"リンク先の数"],
+			["len_parents",u"リンクされている数"],
+			["len_childs",u"リンクしている数"],
 			#"repTopic",
 			["auth_score",u"オーソリティスコア"],
 			["hub_score",u"ハブスコア"]
@@ -237,13 +237,9 @@ class VerboseWidget(QtGui.QWidget):
 			elif tgt_param=="repTopic":
 				val=int(self.lda.n_m_z[id].argmax()+1)
 			elif tgt_param=="len_parents":
-				parents=page_info.get("parents")
-				if parents != None:
-					val=len(parents)
+				val=self.G.in_degree(file_no)#それぞれにアクセスしたいときはG.in_edges(file_no)
 			elif tgt_param=="len_childs":
-				childs=page_info.get("childs")
-				if childs != None:
-					val=len(childs)
+				val=self.G.out_degree(file_no)#それぞれにアクセスしたいときはG.out_edges(file_no)
 			elif tgt_param=="auth_score":
 				val=self.G.node.get(file_no).get("a_score")
 			elif tgt_param=="hub_score":
@@ -355,7 +351,7 @@ def suffix_generator(target=None,is_largest=False):
 
 def main(args):
 	params={}
-	params["search_word"]=u"iPhone"
+	params["search_word"]=u"千葉大学"
 	params["max_page"]=400
 	params["K"]=10
 	params["root_dir"]=ur"C:/Users/fukunaga/Desktop/collect_urls/search_"+params["search_word"]+"_"+unicode(params["max_page"])+"_add_childs"
@@ -370,8 +366,8 @@ def main(args):
 	params["weights_pkl_name"]="all_node_weights_"+params["comp_func_name"]+".gpkl"
 	params["draw_option"]={
 		#"weight_type":[],
-		#"weight_type":["ATTR","REPUL"],
-		"weight_type":["ATTR","REPUL","HITS"],#オーソリティかハブかはsize_attrで指定
+		"weight_type":["ATTR","REPUL"],
+		#"weight_type":["ATTR","REPUL","HITS"],#オーソリティかハブかはsize_attrで指定
 
 		"node_type":"COMP1",#ノード色の決定方法．
 		#REPR:代表トピックで着色
@@ -382,9 +378,9 @@ def main(args):
 		"do_rescale":True,#リスケールの有無
 		"with_label":False,#ラベルの付与の有無
 		#"size_attr":"a_score",#サイズの因子
-		"size_attr":"h_score",#サイズの因子
+		#"size_attr":"h_score",#サイズの因子
 		#"size_attr":"in_degree",#サイズの因子
-		#"size_attr":2000,
+		"size_attr":2000,
 		"cmap":"jet",#色の対応付け方法(カラーバー)
 
 		"lumine":200,#lchを用いる場合の輝度

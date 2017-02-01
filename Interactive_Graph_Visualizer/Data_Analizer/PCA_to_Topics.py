@@ -66,11 +66,11 @@ def output_worddist_lda(lda,word_dists,dir_path="."):
 	book=xlsxwriter.Workbook(os.path.join(dir_path,"words.xlsx"))
 	sheet=book.add_worksheet("words")
 	for col,word_dist in enumerate(word_dists):
-		col*=2
-		for row,word_id in enumerate(np.argsort(-word_dist)[:100]):
+		#col*=2
+		for row,word_id in enumerate(np.argsort(-word_dist)[:20]):
 			str_word=lda.vocas[word_id]#.decode("utf8")#.encode("sjis")
 			sheet.write(row,col,str_word)
-			sheet.write(row,col+1,word_dist[word_id])
+			#sheet.write(row,col+1,word_dist[word_id])
 	book.close()
 
 def cvtRGBAflt2HTML(rgba):
@@ -121,7 +121,7 @@ def output_worddist_lda_tfidf(lda,word_dists,dir_path="."):
 				continue
 			feature[i]=feature[i]*org_word_to_plb_[term]
 
-	output_topn(terms,features,dir_path=dir_path,topn=50)
+	output_topn(terms,features,dir_path=dir_path,topn=20)
 
 def output_topn(terms,features,dir_path=".",topn=20):
 	c_map=cm.jet_r#環境によってPCAの値が反転する？ため，カラーマップを反転させて対応
@@ -172,8 +172,8 @@ def calc_composite_worddist(lda,comp_type="COMP1",lumine=255,cmap="lch"):
 	rev_thetas=calc_composite_thetas(lda,pca,theta_pca)
 	word_dists=rev_thetas.dot(lda.phi())
 	#output_worddist_lda(lda,word_dists)
-	output_worddist_tfidf(lda,word_dists)
-	#output_worddist_lda_tfidf(lda,word_dists)
+	#output_worddist_tfidf(lda,word_dists)
+	output_worddist_lda_tfidf(lda,word_dists)
 
 def main(params):
 	root_dir=params.get("root_dir")
@@ -203,7 +203,7 @@ def suffix_generator(target=None,is_largest=False):
 
 if __name__ == "__main__":
 	params={}
-	params["search_word"]=u"iPhone"
+	params["search_word"]=u"千葉大学"
 	params["max_page"]=400
 	params["K"]=10
 	params["root_dir"]=ur"C:/Users/fukunaga/Desktop/collect_urls/search_"+params["search_word"]+"_"+unicode(params["max_page"])+"_add_childs"
