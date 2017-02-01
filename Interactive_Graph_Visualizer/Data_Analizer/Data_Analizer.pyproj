@@ -24,6 +24,10 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="adjacent_analizer.py">
+      <SubType>
+      </SubType>
+    </Compile>
     <Compile Include="clollection_analizer2.py" />
     <Compile Include="PCA_to_Topics.py" />
     <Compile Include="tooltip_test.py">
