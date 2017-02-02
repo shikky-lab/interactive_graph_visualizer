@@ -80,7 +80,8 @@ def make_topic_ratio_graph(theta,title="topics"):
 	ax.pie(theta,colors=COLORLIST[:len(theta)],labels=labels,startangle=90,radius=0.2, center=(0.5, 0.5), frame=True,counterclock=False)
 	ax.axis("off")
 	ax.axis('equal')
-	ax.set_title(title)
+	fig.canvas.set_window_title(title)
+	#ax.set_title(title)
 	fig.set_facecolor('w')
 	#plt.savefig(os.path.join(exp_dir,"Topic"+unicode(lda.K)+"_share_pie.png"))
 
@@ -93,8 +94,10 @@ def main(params):
 	with open(os.path.join(exp_dir,"instance.pkl")) as fi:
 	   lda=pickle.load(fi)
 
-	parent_topics=get_adjecents_topics(G,lda,1,"in")
-	child_topics=get_adjecents_topics(G,lda,1,"out")
+	tgt_node=params["target_node"]
+
+	parent_topics=get_adjecents_topics(G,lda,tgt_node,"in")
+	child_topics=get_adjecents_topics(G,lda,tgt_node,"out")
 
 	print "parent_topics",parent_topics
 	make_topic_ratio_graph(parent_topics,title="parents")
@@ -122,5 +125,6 @@ if __name__=="__main__":
 	params["comp_func_name"]="comp4_2"
 	params["nx_dir"]=os.path.join(os.path.join(params["root_dir"],params["exp_name"]),"nx_datas")
 	params["src_pkl_name"]="G_with_params_"+params["comp_func_name"]+".gpkl"
+	params["target_node"]=82
 
 	main(params)

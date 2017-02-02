@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>b090b8d8-4485-482d-8115-302f8df1710b</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>PCA_to_Topics.py</StartupFile>
+    <StartupFile>adjacent_analizer.py</StartupFile>
     <SearchPath>..\networkx-master\;..\..\MyPythonModule\;..\Interactive_Graph_Visualizer\</SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>

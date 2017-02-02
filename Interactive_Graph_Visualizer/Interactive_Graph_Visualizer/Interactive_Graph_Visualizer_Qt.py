@@ -96,6 +96,39 @@ def zoom_factory(ax,base_scale = 2.,startX=0,starty=0):
 	#return the function
 	return zoom_fun
 
+
+"""
+@attr
+G:Graph of networkx
+node_no:the number of node.collect adjacents around  this node.
+link_type:select link direction. in or out.
+@ret
+list of node numbers
+"""
+def collect_adjacents(G,node_no,link_type):
+	ret_list=[]
+	if link_type=="in" or link_type=="both":
+		for edge in G.in_edges(node_no):
+			ret_list.append(edge[0])
+	if link_type=="out" or link_type=="both":
+		for edge in G.out_edges(node_no):
+			ret_list.append(edge[1])
+
+	return ret_list
+
+def transparent_adjacents(link_type):
+	global global_datas
+	cur_select_node=global_datas.get("cur_select_node")
+	if cur_select_node is None:
+		return
+
+	G=global_datas.get("G")
+	adjacents=collect_adjacents(G,cur_select_node,link_type)
+
+def release_transparency():
+	pass
+
+flag_dict={}#stores each keys state which pushed or not
 """
 キー入力コールバック
 b:ノードサイズを倍に
@@ -118,6 +151,15 @@ def key_press_factory(ax,qwidget):
 			plot_datas["node_collection"].set_sizes(initial_sizes)
 		if event.key == 's':
 			fig.savefig("graph_figure.png")
+		if event.key == 'v':#switch adjacents transparency
+			global cur_select_node
+			if flag_dict.get("v",True):
+				transparent_adjacents(link_type="both")
+				flag_dict["v"]=True
+			else:
+				release_transparency()
+				flag_dict["v"]=False
+			
 		fig.canvas.draw()
 
 	fig = ax.get_figure() # get the figure of interest
@@ -128,6 +170,8 @@ def key_press_factory(ax,qwidget):
 
 initial_plot_datas={}
 plot_datas={}
+global_datas={}
+#cur_select_node=None #stores recently picked node
 class ForceGraph():
 	def __init__(self,*args,**kwargs):
 		parent=kwargs.get("parent")
@@ -154,6 +198,8 @@ class ForceGraph():
 		src_pkl_name=self.params.get("src_pkl_name")
 		with open(os.path.join(nx_dir,src_pkl_name),"r") as fi:
 			self.G=pickle.load(fi)
+		global global_datas
+		global_datas["G"]=self.G
 
 	def on_draw(self):
 		global plot_datas
@@ -164,6 +210,7 @@ class ForceGraph():
 		self.canvas.draw()
 
 	def pick_func(self,event):
+		global global_datas
 		if event.mouseevent.name != "button_press_event":
 			return
 		idxs=event.ind
@@ -171,6 +218,7 @@ class ForceGraph():
 			print idxs,"file_no=",self.G.node.keys()[i]
 			#self.vervoseWidget.change_content(i)
 			self.vervoseWidget.change_content(self.G.node.keys()[i])
+			global_datas["cur_select_node"]=i
 			break
 
 class VerboseWidget(QtGui.QWidget):
@@ -207,8 +255,8 @@ class VerboseWidget(QtGui.QWidget):
 			self.topicGraph.on_draw(self.lda.theta()[lda_no])#トピック分布グラフの表示
 
 		tgt_params=[
-			#["id","id"],
-			#"name_id",
+			["id","LDA_no"],
+			["name_id","file_no"],
 			["title",u"タイトル"],
 			#"len(text)",
 			["url",u"url"],
@@ -225,7 +273,7 @@ class VerboseWidget(QtGui.QWidget):
 		for i,(tgt_param,name) in enumerate(tgt_params):
 			val=0
 			if tgt_param=="id":
-				val=id
+				val=lda_no
 			elif tgt_param=="name_id":
 				val=file_no
 			elif tgt_param=="domain":
