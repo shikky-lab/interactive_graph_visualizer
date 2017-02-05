@@ -97,36 +97,34 @@ def zoom_factory(ax,base_scale = 2.,startX=0,starty=0):
 	return zoom_fun
 
 
-"""
-@attr
-G:Graph of networkx
-node_no:the number of node.collect adjacents around  this node.
-link_type:select link direction. in or out.
-@ret
-list of node numbers
-"""
-def collect_adjacents(G,node_no,link_type):
-	ret_list=[]
-	if link_type=="in" or link_type=="both":
-		for edge in G.in_edges(node_no):
-			ret_list.append(edge[0])
-	if link_type=="out" or link_type=="both":
-		for edge in G.out_edges(node_no):
-			ret_list.append(edge[1])
+#"""
+#@attr
+#G:Graph of networkx
+#node_no:the number of node.collect adjacents around  this node.
+#link_type:select link direction. in or out.
+#@ret
+#list of node numbers
+#"""
+#def collect_adjacents(G,node_no,link_type):
+#	ret_list=[]
+#	if link_type=="in" or link_type=="both":
+#		for edge in G.in_edges(node_no):
+#			ret_list.append(edge[0])
+#	if link_type=="out" or link_type=="both":
+#		for edge in G.out_edges(node_no):
+#			ret_list.append(edge[1])
 
-	return ret_list
+#	return ret_list
 
-def transparent_adjacents(link_type):
-	global global_datas
-	cur_select_node=global_datas.get("cur_select_node")
-	if cur_select_node is None:
-		return
+#def transparent_adjacents(link_type):
+#	global global_datas
+#	cur_select_node=global_datas.get("cur_select_node")
+#	if cur_select_node is None:
+#		return
 
-	G=global_datas.get("G")
-	adjacents=collect_adjacents(G,cur_select_node,link_type)
-
-def release_transparency():
-	pass
+#	G=global_datas.get("G")
+#	adjacents=collect_adjacents(G,cur_select_node,link_type)
+#	my_graph_drawer.graph_redraw(G)
 
 flag_dict={}#stores each keys state which pushed or not
 """
@@ -139,8 +137,10 @@ s:現在の描画を保存
 def key_press_factory(ax,qwidget):
 	global plot_datas
 	global initial_plot_datas
+	global global_datas
 	def key_press_func(event):
 		fig = ax.get_figure() # get the figure of interest
+		G=global_datas.get("G")
 		sizes=plot_datas["node_collection"].get_sizes()
 		if event.key == 'b':
 			plot_datas["node_collection"].set_sizes(sizes*2)
@@ -152,14 +152,17 @@ def key_press_factory(ax,qwidget):
 		if event.key == 's':
 			fig.savefig("graph_figure.png")
 		if event.key == 'v':#switch adjacents transparency
-			global cur_select_node
+			ax.clear()
 			if flag_dict.get("v",True):
-				transparent_adjacents(link_type="both")
-				flag_dict["v"]=True
-			else:
-				release_transparency()
+				sel_node=global_datas.get("cur_select_node")
+				my_graph_drawer.transparent_adjacents(G,sel_node,link_type="both")
 				flag_dict["v"]=False
-			
+			else:
+				my_graph_drawer.graph_redraw(G)
+				flag_dict["v"]=True
+		if event.key == 'D':#redraw all nodes
+			ax.clear()
+			my_graph_drawer.graph_redraw(G)
 		fig.canvas.draw()
 
 	fig = ax.get_figure() # get the figure of interest
@@ -218,7 +221,7 @@ class ForceGraph():
 			print idxs,"file_no=",self.G.node.keys()[i]
 			#self.vervoseWidget.change_content(i)
 			self.vervoseWidget.change_content(self.G.node.keys()[i])
-			global_datas["cur_select_node"]=i
+			global_datas["cur_select_node"]=self.G.node.keys()[i]
 			break
 
 class VerboseWidget(QtGui.QWidget):

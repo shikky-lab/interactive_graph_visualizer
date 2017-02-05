@@ -285,8 +285,13 @@ def calc_nodesize(G,attr="a_score",min_size=1000,max_size=5000):
 		size_dict[node_no]=size
 	return size_dict
 
+pos=0
+def main(_params):
+	global draw_kwargs
+	global params
+	global pos
+	params=_params#本当はこのスクリプト全体をクラスにしてparamsをクラス内変数にしたいが，面倒なのでglobalを使って疑似的にモジュール化
 
-def main(params):
 	root_dir=params.get("root_dir")
 	exp_name=params.get("exp_name")
 	nx_dir=params.get("nx_dir")
@@ -351,6 +356,7 @@ def main(params):
 			"draw_option":draw_option
 		}
 	node_collection,color_map=draw_network(G,pos,**draw_kwargs)
+	draw_option["used_color_map"]=color_map
 
 	plot_datas={
 			"node_collection":node_collection
@@ -366,6 +372,70 @@ def main(params):
 	#with open("final_graph.gpkl","w") as fo:
 	#	pickle.dump(G,fo)
 
+def graph_redraw(G,_pos=None,_color_map=None,**kwargs):
+	global pos
+	global draw_kwargs
+	size=draw_kwargs.get("size")
+	draw_option=draw_kwargs.get("draw_option")
+	ax=draw_option.get("ax")
+	pick_func=draw_option.get("pick_func")
+	widths=kwargs.get("widths")
+	if _pos==None:
+		_pos=pos
+	if _color_map == None:
+		_color_map=draw_option.get("used_color_map")
+	edges=kwargs.get("edgelist")
+	node_color=_color_map.values()
+
+	size_array=size.values()
+	#node_collection=nx.draw(G,pos=_pos,node_color=node_color,node_size=size_array,ax=ax,pick_func=pick_func)
+	node_collection=nx.draw_networkx_nodes(G,pos=pos,node_color=node_color,node_size=size_array,ax=ax,pick_func=pick_func)
+	nx.draw_networkx_edges(G,pos,ax=ax,edgelist=edges)
+	return node_collection
+
+"""
+@attr
+G:Graph of networkx
+node_no:the number of node.collect adjacents around  this node.
+link_type:select link direction. in or out.
+@ret
+set of node numbers
+"""
+def collect_adjacents(G,node_no,link_type):
+	ret_list=[]
+	edges=[]
+	if link_type=="in" or link_type=="both":
+		for edge in G.in_edges(node_no):
+			edges.append(edge)
+			ret_list.append(edge[0])
+	if link_type=="out" or link_type=="both":
+		for edge in G.out_edges(node_no):
+			edges.append(edge)
+			ret_list.append(edge[1])
+
+	return set(ret_list),edges
+
+def transparent_adjacents(G,sel_node,link_type,_pos=None,_color_map=None,**kwargs):
+	global draw_kwargs
+	draw_option=draw_kwargs.get("draw_option")
+	if sel_node is None:
+		return
+
+	adjacents,edgelist=collect_adjacents(G,sel_node,link_type)
+	color_map=draw_option.get("used_color_map")
+	new_color_map={}
+	"""該当ノードに対する処理"""
+	for k,v in color_map.items():
+		if k in adjacents:
+			new_color_map[k]=color_map[k]
+			#new_color_map[k]=v.replace("#","#00")
+		else:
+			new_color_map[k]=u"#FFFFFF"
+			#new_color_map[k]=v.replace("#","#80")
+	new_color_map[sel_node]=color_map[sel_node]
+	
+	graph_redraw(G,_color_map=new_color_map,edgelist=edgelist)
+
 def suffix_generator(target=None,is_largest=False):
 	suffix=""
 	if target != None:
@@ -374,8 +444,9 @@ def suffix_generator(target=None,is_largest=False):
 		suffix+="_largest"
 	return suffix
 
+
+params={}
 if __name__ == "__main__":
-	params={}
 	params["search_word"]="iPhone"
 	params["max_page"]=400
 	params["K"]=10
