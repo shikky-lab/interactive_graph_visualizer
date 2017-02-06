@@ -96,36 +96,6 @@ def zoom_factory(ax,base_scale = 2.,startX=0,starty=0):
 	#return the function
 	return zoom_fun
 
-
-#"""
-#@attr
-#G:Graph of networkx
-#node_no:the number of node.collect adjacents around  this node.
-#link_type:select link direction. in or out.
-#@ret
-#list of node numbers
-#"""
-#def collect_adjacents(G,node_no,link_type):
-#	ret_list=[]
-#	if link_type=="in" or link_type=="both":
-#		for edge in G.in_edges(node_no):
-#			ret_list.append(edge[0])
-#	if link_type=="out" or link_type=="both":
-#		for edge in G.out_edges(node_no):
-#			ret_list.append(edge[1])
-
-#	return ret_list
-
-#def transparent_adjacents(link_type):
-#	global global_datas
-#	cur_select_node=global_datas.get("cur_select_node")
-#	if cur_select_node is None:
-#		return
-
-#	G=global_datas.get("G")
-#	adjacents=collect_adjacents(G,cur_select_node,link_type)
-#	my_graph_drawer.graph_redraw(G)
-
 flag_dict={}#stores each keys state which pushed or not
 """
 キー入力コールバック
@@ -152,6 +122,8 @@ def key_press_factory(ax,qwidget):
 		if event.key == 's':
 			fig.savefig("graph_figure.png")
 		if event.key == 'v':#switch adjacents transparency
+			cur_xlim = ax.get_xlim()
+			cur_ylim = ax.get_ylim()
 			ax.clear()
 			if flag_dict.get("v",True):
 				sel_node=global_datas.get("cur_select_node")
@@ -160,6 +132,9 @@ def key_press_factory(ax,qwidget):
 			else:
 				my_graph_drawer.graph_redraw(G)
 				flag_dict["v"]=True
+			ax.set_xlim(cur_xlim)
+			ax.set_ylim(cur_ylim)
+
 		if event.key == 'D':#redraw all nodes
 			ax.clear()
 			my_graph_drawer.graph_redraw(G)
