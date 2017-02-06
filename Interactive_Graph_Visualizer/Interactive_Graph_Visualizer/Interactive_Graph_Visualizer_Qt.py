@@ -309,15 +309,42 @@ class SettingWidget(QtGui.QWidget):
 
 		self.params=kwargs.get("params")
 
+		hbox = QtGui.QHBoxLayout()
 		self.attr_weight_check=QtGui.QCheckBox("attr",self)
 		self.repl_weight_check=QtGui.QCheckBox("repl",self)
-
-		hbox = QtGui.QHBoxLayout()
 		hbox.addWidget(self.attr_weight_check)    #add canvs to the layout
 		hbox.addWidget(self.repl_weight_check)    #add canvs to the layout
+		power_group=QtGui.QGroupBox("power")
+		power_group.setLayout(hbox)
 
-		vbox = QtGui.QHBoxLayout(self)
-		vbox.addLayout(hbox)
+		vbox = QtGui.QVBoxLayout()
+		lower_box=QtGui.QHBoxLayout()
+		lower_slider_label = QtGui.QLabel('lower :')
+		self.lower_slider=QtGui.QSlider(QtCore.Qt.Horizontal)
+		self.lower_slider.setRange(0,100)
+		self.lower_slider.setValue(0)
+		lower_box.addWidget(lower_slider_label,0)
+		lower_box.addWidget(self.lower_slider,1)
+
+		higher_box=QtGui.QHBoxLayout()
+		higher_slider_label = QtGui.QLabel('higher:')
+		self.higher_slider=QtGui.QSlider(QtCore.Qt.Horizontal)
+		self.higher_slider.setRange(0,100)
+		self.higher_slider.setValue(100)
+		higher_box.addWidget(higher_slider_label,0)
+		higher_box.addWidget(self.higher_slider,1)
+
+		vbox.addLayout(lower_box)
+		vbox.addLayout(higher_box)
+		slider_group=QtGui.QGroupBox("cut off color")
+		slider_group.setLayout(vbox)
+
+		apply_button=QtGui.QPushButton('Apply')
+
+		vbox = QtGui.QVBoxLayout(self)
+		vbox.addWidget(power_group)
+		vbox.addWidget(slider_group)
+		vbox.addWidget(apply_button)
 		vbox.addStretch(1)
 
 		exp_dir=os.path.join(self.params["root_dir"],self.params["exp_name"])
@@ -342,7 +369,7 @@ class AppForm(QtGui.QMainWindow):
 		self.topicGraph = TopicGraph(self.main_frame,params=self.params)
 		self.verboseWidget=VerboseWidget(self.main_frame,params=self.params,topicGraph=self.topicGraph)
 		self.forceGraph = ForceGraph(self.main_frame,params=self.params,verboseWidget=self.verboseWidget)
-		#self.settingWidget=SettingWidget(self.main_frame,params=self.params)
+		self.settingWidget=SettingWidget(self.main_frame,params=self.params)
 
 		#set layout
 		hbox = QtGui.QHBoxLayout()
@@ -358,9 +385,9 @@ class AppForm(QtGui.QMainWindow):
 		right_dock2.setWidget(self.topicGraph.canvas)
 		self.addDockWidget(Qt.Qt.RightDockWidgetArea, right_dock2)
 
-		#left_dock = QtGui.QDockWidget('Settings',self)
-		#left_dock.setWidget(self.settingWidget)
-		#self.addDockWidget(Qt.Qt.LeftDockWidgetArea, left_dock)
+		left_dock = QtGui.QDockWidget('Settings',self)
+		left_dock.setWidget(self.settingWidget)
+		self.addDockWidget(Qt.Qt.LeftDockWidgetArea, left_dock)
 
 		self.setCentralWidget(self.main_frame)
 
@@ -377,7 +404,7 @@ def suffix_generator(target=None,is_largest=False):
 
 def main(args):
 	params={}
-	params["search_word"]=u"千葉大学"
+	params["search_word"]=u"iPhone"
 	params["max_page"]=400
 	params["K"]=10
 	params["root_dir"]=ur"C:/Users/fukunaga/Desktop/collect_urls/search_"+params["search_word"]+"_"+unicode(params["max_page"])+"_add_childs"
