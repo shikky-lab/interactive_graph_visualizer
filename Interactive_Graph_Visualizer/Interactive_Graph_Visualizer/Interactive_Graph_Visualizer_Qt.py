@@ -127,17 +127,17 @@ def key_press_factory(ax,qwidget):
 			ax.clear()
 			if flag_dict.get("v",True):
 				sel_node=global_datas.get("cur_select_node")
-				my_graph_drawer.transparent_adjacents(G,sel_node,link_type="both")
+				stable_scale_draw(ax,my_graph_drawer.transparent_adjacents,G,sel_node,link_type="both")
 				flag_dict["v"]=False
 			else:
-				my_graph_drawer.graph_redraw(G)
+				stable_scale_draw(ax,my_graph_drawer.graph_redraw,G)
 				flag_dict["v"]=True
 			ax.set_xlim(cur_xlim)
 			ax.set_ylim(cur_ylim)
 
 		if event.key == 'D':#redraw all nodes
 			ax.clear()
-			my_graph_drawer.graph_redraw(G)
+			stable_scale_draw(ax,my_graph_drawer.graph_redraw,G)
 		fig.canvas.draw()
 
 	fig = ax.get_figure() # get the figure of interest
@@ -302,8 +302,17 @@ class TopicGraph():
 		self.axes.axis([0,K+1,0,1])
 		self.canvas.draw()
 
+def stable_scale_draw(ax,draw_func,*args,**kwargs):
+	cur_xlim = ax.get_xlim()
+	cur_ylim = ax.get_ylim()
+	ax.clear()
+	draw_func(*args,**kwargs)
+	ax.get_figure().canvas.draw()
+	ax.set_xlim(cur_xlim)
+	ax.set_ylim(cur_ylim)
+
 class SettingWidget(QtGui.QWidget):
-	def __init__(self,*args,**kwargs):
+	def __init__(self,*setting_args,**kwargs):
 		parent=kwargs.get("parent")
 		QtGui.QWidget.__init__(self ,parent=parent)
 
@@ -339,7 +348,8 @@ class SettingWidget(QtGui.QWidget):
 		slider_group=QtGui.QGroupBox("cut off color")
 		slider_group.setLayout(vbox)
 
-		apply_button=QtGui.QPushButton('Apply')
+		apply_button=QtGui.QPushButton("Apply")
+		apply_button.clicked.connect(self.apply_button_callback)
 
 		vbox = QtGui.QVBoxLayout(self)
 		vbox.addWidget(power_group)
@@ -354,6 +364,15 @@ class SettingWidget(QtGui.QWidget):
 		   self.lda=pickle.load(fi)
 		with open(os.path.join(nx_dir,src_pkl_name),"r") as fi:
 			self.G=pickle.load(fi)
+
+	def apply_button_callback(self):
+		global global_datas
+		G=global_datas.get("G")
+		ax=self.params["draw_option"]["ax"]
+		lower=float(self.lower_slider.value())/self.lower_slider.maximum()
+		higher=float(self.higher_slider.value())/self.higher_slider.maximum()
+
+		stable_scale_draw(ax,my_graph_drawer.cut_off_colors,G,lower,higher)
 
 class AppForm(QtGui.QMainWindow):
 	def __init__(self,*args,**kwargs):#parent=None,params=None):

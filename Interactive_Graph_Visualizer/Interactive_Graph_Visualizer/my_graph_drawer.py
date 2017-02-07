@@ -127,7 +127,9 @@ def cvtRGBAflt2HTML(rgba):
 	rgb_uint=(rgb*255).astype(np.uint8)
 	return LDA_PCA.cvtRGB_to_HTML(rgb_uint)
 
+reg_theta_pca=0
 def get_color_map_theta(G,pos,lda,comp_type="COMP1",lumine=255,cmap="lch"):
+	global reg_theta_pca
 	"""thetaの方を主成分分析で1次元にして彩色"""
 	theta=lda.theta()[:len(lda.docs)]
 
@@ -137,6 +139,8 @@ def get_color_map_theta(G,pos,lda,comp_type="COMP1",lumine=255,cmap="lch"):
 	reg_theta_pca=(theta_pca-theta_pca.min())/(theta_pca.max()-theta_pca.min())#0~1に正規化
 	h_values=circler_color_converter(reg_theta_pca*2*np.pi,0.2).T[0]#列ヴェクトルとして与えられるため，1行に変換
 	make_lch_picker.draw_color_hist(h_values,resolution=50,lumine=lumine,color_map=cmap)#色変換の図を表示
+
+	"""寄与率計算のため，再度PCA"""
 	pca2=decomposition.PCA(lda.K)
 	pca2.fit(theta)
 	print pca2.explained_variance_ratio_
@@ -384,9 +388,9 @@ def graph_redraw(G,_pos=None,_color_map=None,**kwargs):
 		_pos=pos
 	if _color_map == None:
 		_color_map=draw_option.get("used_color_map")
-	edges=kwargs.get("edgelist")
-	node_color=_color_map.values()
+	edges=kwargs.get("edgelist")#if None, nx.draw_network_edges defaulet uses G.edges()
 
+	node_color=_color_map.values()
 	size_array=size.values()
 	#node_collection=nx.draw(G,pos=_pos,node_color=node_color,node_size=size_array,ax=ax,pick_func=pick_func)
 	node_collection=nx.draw_networkx_nodes(G,pos=pos,node_color=node_color,node_size=size_array,ax=ax,pick_func=pick_func)
@@ -394,9 +398,9 @@ def graph_redraw(G,_pos=None,_color_map=None,**kwargs):
 	return node_collection
 
 """
-@attr
+@arg
 G:Graph of networkx
-node_no:the number of node.collect adjacents around  this node.
+node_no:number of the node.collect adjacents around  this node.
 link_type:select link direction. in or out.
 @ret
 set of node numbers
@@ -434,6 +438,27 @@ def transparent_adjacents(G,sel_node,link_type,_pos=None,_color_map=None,**kwarg
 			#new_color_map[k]=v.replace("#","#80")
 	new_color_map[sel_node]=color_map[sel_node]
 	
+	graph_redraw(G,_color_map=new_color_map,edgelist=edgelist)
+
+def cut_off_colors(G,lower,higher,**kwargs):
+	global draw_kwargs
+	global reg_theta_pca
+	draw_option=draw_kwargs.get("draw_option")
+	color_map=draw_option.get("used_color_map")
+
+	if higher<=lower:
+		higher=0
+	
+	new_color_map={}
+	"""該当ノードに対する処理"""
+	edgelist=[]
+	nodes=color_map.keys()
+	for k,val in zip(nodes,reg_theta_pca):
+		if lower<val<higher:
+			new_color_map[k]=color_map[k]
+			edgelist.extend([edge for edge in G.edges(k)])
+		else:
+			new_color_map[k]=u"#FFFFFF"
 	graph_redraw(G,_color_map=new_color_map,edgelist=edgelist)
 
 def suffix_generator(target=None,is_largest=False):
