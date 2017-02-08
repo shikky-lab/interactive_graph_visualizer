@@ -22,7 +22,7 @@ import cPickle as pickle
 import matplotlib.pyplot as plt
 import matplotlib
 import matplotlib.cm as cm
-#from LDA_kai import LDA
+from LDA_kai import LDA
 from math import modf#整数と小数の分離
 import matplotlib.font_manager
 import color_changer
@@ -419,6 +419,15 @@ def collect_adjacents(G,node_no,link_type):
 
 	return set(ret_list),edges
 
+"""
+change adjacents color to white and hide edges
+@arg
+G:Graph of networkx
+sel_node:number of the node
+link_type:select link direction. in or out.
+@ret
+None
+"""
 def transparent_adjacents(G,sel_node,link_type,_pos=None,_color_map=None,**kwargs):
 	global draw_kwargs
 	draw_option=draw_kwargs.get("draw_option")
@@ -440,6 +449,15 @@ def transparent_adjacents(G,sel_node,link_type,_pos=None,_color_map=None,**kwarg
 	
 	graph_redraw(G,_color_map=new_color_map,edgelist=edgelist)
 
+"""
+draw only nodes within the specified color range
+@arg
+G:Graph of networkx
+lower:minimum value of range
+higher:maximum value of range
+@ret
+None
+"""
 def cut_off_colors(G,lower,higher,**kwargs):
 	global draw_kwargs
 	global reg_theta_pca
@@ -447,13 +465,17 @@ def cut_off_colors(G,lower,higher,**kwargs):
 	color_map=draw_option.get("used_color_map")
 
 	if higher<=lower:
-		higher=0
+		lower=0
+		higher=1
 	
+	lda=draw_kwargs.get("lda")
+	file_id_dict_inv = {v:k for k, v in lda.file_id_dict.items()}#ファイル名とLDAでの文書番号(逆引き)．LDAの方に作っとけばよかった．．．
 	new_color_map={}
 	"""該当ノードに対する処理"""
 	edgelist=[]
 	nodes=color_map.keys()
-	for k,val in zip(nodes,reg_theta_pca):
+	for k in nodes:
+		val=reg_theta_pca[file_id_dict_inv[k]]
 		if lower<val<higher:
 			new_color_map[k]=color_map[k]
 			edgelist.extend([edge for edge in G.edges(k)])
@@ -468,7 +490,6 @@ def suffix_generator(target=None,is_largest=False):
 	if is_largest == True:
 		suffix+="_largest"
 	return suffix
-
 
 params={}
 if __name__ == "__main__":

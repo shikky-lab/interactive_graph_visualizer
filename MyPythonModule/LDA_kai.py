@@ -83,7 +83,8 @@ class LDA:
 		self.vocas_id = dict()
 
 		self.docs = [[self.term_to_id(term) for term in doc] for doc in new_corpus]#文書をIDに変えて行列に突っ込む.vocasも更新される
-		M = len(corpus)
+		#M = len(corpus)
+		M = len(new_corpus)#20170207修正
 		V = len(self.vocas)
 
 		"""文書の番号と実際の文書名の対応付けを保存"""
