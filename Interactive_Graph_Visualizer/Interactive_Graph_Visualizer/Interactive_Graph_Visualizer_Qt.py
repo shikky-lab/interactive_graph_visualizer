@@ -16,6 +16,7 @@ from matplotlib.figure import Figure
 #import networkx as nx
 import cPickle as pickle
 import json
+import collections
 
 import my_graph_drawer
 
@@ -146,6 +147,14 @@ def key_press_factory(ax,qwidget):
 	fig.canvas.mpl_connect('key_press_event',key_press_func)
 	return key_press_func
 
+def denote_words_freq(text,topn=20,delimiter=","):
+	count_dict=collections.Counter(text)
+	commons=count_dict.most_common(topn)
+	ret_str=u""
+	for word,cnt in commons:
+		ret_str+=unicode(word)+":"+unicode(cnt)+delimiter
+	return ret_str[:-1]#最後のdelimiterを除外
+
 initial_plot_datas={}
 plot_datas={}
 global_datas={}
@@ -199,6 +208,7 @@ class ForceGraph():
 			global_datas["cur_select_node"]=self.G.node.keys()[i]
 			break
 
+
 class VerboseWidget(QtGui.QWidget):
 	def __init__(self,*args,**kwargs):
 		parent=kwargs.get("parent")
@@ -210,8 +220,10 @@ class VerboseWidget(QtGui.QWidget):
 		self.table.horizontalHeader().setVisible(False)
 		self.table.verticalHeader().setVisible(False)
 		self.table.horizontalHeader().setStretchLastSection(True)
-		vbox = QtGui.QVBoxLayout(self)
-		vbox.addWidget(self.table,1)    #add canvs to the layout
+		items_vbox = QtGui.QVBoxLayout(self)
+		items_vbox.addWidget(self.table,1) 
+		self.bow_textbox=QtGui.QTextEdit(self)
+		items_vbox.addWidget(self.bow_textbox,0) 
 
 		exp_dir=os.path.join(self.params["root_dir"],self.params["exp_name"])
 		src_pkl_name=self.params.get("src_pkl_name")
@@ -276,6 +288,11 @@ class VerboseWidget(QtGui.QWidget):
 				val=unicode(val)
 			self.table.setItem(i,0,QtGui.QTableWidgetItem(name))
 			self.table.setItem(i,1,QtGui.QTableWidgetItem(val))
+
+		""""表の下に追加する項目"""
+		bow=[unicode(self.lda.vocas[word_id]) for word_id in self.lda.docs[lda_no]]
+		self.bow_textbox.clear()
+		self.bow_textbox.append(denote_words_freq(bow,topn=15,delimiter="\n"))
 
 class TopicGraph():
 	def __init__(self,*args,**kwargs):
@@ -349,7 +366,7 @@ class SettingWidget(QtGui.QWidget):
 		self.higher_slider.setValue(100)
 		h_spinbox=QtGui.QSpinBox()
 		h_spinbox.setRange(0,100)
-		h_spinbox.setValue(0)
+		h_spinbox.setValue(100)
 		h_spinbox.valueChanged[int].connect(self.higher_slider.setValue)
 		self.higher_slider.valueChanged[int].connect(h_spinbox.setValue)
 		higher_box.addWidget(higher_slider_label,0)

@@ -38,7 +38,7 @@ def circler_color_deconverter(values,start_angle):
 	values=values/(2*np.pi)
 	return values
 
-def calc_composite_thetas(lda,pca,theta_pca):
+def calc_composite_thetas(lda,pca,theta_pca,output=False):
 	#steps = np.linspace(0, 1, 50)  
 	steps = np.linspace(theta_pca.min(), theta_pca.max(), 10)  
 	#theta=lda.theta()[:len(lda.docs)]
@@ -53,11 +53,12 @@ def calc_composite_thetas(lda,pca,theta_pca):
 	molecs=pca.inverse_transform(steps[np.newaxis].T)-pca.inverse_transform(steps[np.newaxis].T).min(axis=1)[np.newaxis].T+lda.alpha
 	rev_thetas=molecs/molecs.sum(axis=1)[np.newaxis].T
 
-	#with open("rev_thetas.csv","w") as fo:
-	#	for rev_theta in rev_thetas:
-	#		for val in rev_theta:
-	#			print>>fo,val,
-	#		print>>fo,""
+	if output==True:
+		with open("rev_thetas.csv","w") as fo:
+			for rev_theta in rev_thetas:
+				for val in rev_theta:
+					print>>fo,val,
+				print>>fo,""
 
 	return rev_thetas
 
@@ -169,7 +170,8 @@ def calc_composite_worddist(lda,comp_type="COMP1",lumine=255,cmap="lch"):
 
 	#reg_theta_pca=(theta_pca-theta_pca.min())/(theta_pca.max()-theta_pca.min())#0~1に正規化
 	
-	rev_thetas=calc_composite_thetas(lda,pca,theta_pca)
+	rev_thetas=calc_composite_thetas(lda,pca,theta_pca,output=True)
+	exit()
 	word_dists=rev_thetas.dot(lda.phi())
 	#output_worddist_lda(lda,word_dists)
 	#output_worddist_tfidf(lda,word_dists)
@@ -203,7 +205,7 @@ def suffix_generator(target=None,is_largest=False):
 
 if __name__ == "__main__":
 	params={}
-	params["search_word"]=u"千葉大学"
+	params["search_word"]=u"iPhone"
 	params["max_page"]=400
 	params["K"]=10
 	params["root_dir"]=ur"C:/Users/fukunaga/Desktop/collect_urls/search_"+params["search_word"]+"_"+unicode(params["max_page"])+"_add_childs"
