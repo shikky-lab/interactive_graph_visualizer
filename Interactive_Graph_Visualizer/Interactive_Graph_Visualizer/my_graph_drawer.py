@@ -353,6 +353,7 @@ def main(_params):
 	weight_type=draw_option.get("weight_type",["ATTR","REPUL"])
 	do_rescale=draw_option.get("do_rescale",True)
 	size_attr=draw_option.get("size_attr",2000)
+	weight_attr=draw_option.get("weight_attr",0)
 	save_drawoption(draw_option,os.path.join(nx_dir,"draw_option.txt"))
 
 	"""グラフの構築・描画"""
@@ -365,7 +366,10 @@ def main(_params):
 		weight_type[weight_type.index("BHITS")]="HITS"
 	else:
 		use_bhits=False
-	revised_hits_scores=calc_nodesize(G,attr=size_attr,min_size=1,max_size=3,use_bhits=use_bhits,weight_key="no_weight")#引力斥力計算用に正規化したhitsスコア.calc_nodesizeを共用
+
+	revised_hits_scores=None
+	if ("HITS" in  weight_type) and (type(weight_attr) is dict):
+		revised_hits_scores=calc_nodesize(G,attr=weight_attr["type"],min_size=weight_attr["min"],max_size=weight_attr["max"],use_bhits=use_bhits,weight_key="no_weight")#引力斥力計算用に正規化したhitsスコア.calc_nodesizeを共用
 
 	"""初期値の代入"""
 	initial_pos=pos_initializer(G_undirected,os.path.join(root_dir,pos_rand_path))
@@ -377,14 +381,17 @@ def main(_params):
 	weight_label="weight" 
 	if "REPUL" not in weight_type :
 		weight_label="nowehgiht"#各エッジの重みは"weight"キーに入っているため，これ以外を指定すると重みなしとなる．
-	if "HITS" not in  weight_type:
-		revised_hits_scores=None
 
 	"""配置の計算"""
 	pos=nx.spring_layout(G_undirected,pos=pos,all_node_weights=all_nodes_weights,weight=weight_label,rescale=do_rescale,weight_type=weight_type,revised_hits_scores=revised_hits_scores)#描画位置はここで確定,両方の重みをかける
 		
+	"""ノードサイズの計算"""
+	if type(size_attr) is dict:
+		size_dict=calc_nodesize(G,attr=size_attr["type"],min_size=size_attr["min"],max_size=size_attr["max"])
+	else:
+		size_dict=calc_nodesize(G,attr=size_attr)
+
 	"""実際の描画処理"""
-	size_dict=calc_nodesize(G,attr=size_attr,min_size=1000,max_size=3000)
 	#new_color_map=draw_network(G,pos,size=size_dict,option=node_type,lda=lda,dpi=dpi,with_label=with_label,lumine=lumine,color_map_by=color_map_by,cmap=cmap)
 	draw_kwargs={
 			"size":size_dict,

@@ -329,7 +329,7 @@ def fruchterman_reingold_layout(G, k=None,
 	except:
 		A = nx.to_numpy_matrix(G, weight=weight)
 		hits_scores=None
-		if "HITS" in weight_type:
+		if revised_hits_scores is not None:
 			hits_scores=np.array(revised_hits_scores.values())
 		if k is None and fixed is not None:
 			# We must adjust k by domain size for layouts not near 1x1

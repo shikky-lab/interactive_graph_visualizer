@@ -473,8 +473,8 @@ def main(args):
 	params["weights_pkl_name"]="all_node_weights_"+params["comp_func_name"]+".gpkl"
 	params["draw_option"]={
 		#"weight_type":[],
-		"weight_type":["ATTR","REPUL"],
-		#"weight_type":["ATTR","REPUL","BHITS"],#オーソリティかハブかはsize_attrで指定
+		#"weight_type":["ATTR","REPUL"],
+		"weight_type":["ATTR","REPUL","BHITS"],#オーソリティかハブかはsize_attrで指定
 		#"weight_type":["HITS"],#オーソリティかハブかはsize_attrで指定
 
 		"pos_rand_path":"nest1.rand",#初期配置の乱数を格納．未指定の場合は毎回乱数生成
@@ -487,9 +487,9 @@ def main(args):
 
 		"do_rescale":True,#リスケールの有無
 		"with_label":False,#ラベルの付与の有無
-		#"size_attr":"a_score",#サイズの因子,size_attr未指定ならデフォルト値2000で指定される
-		#"size_attr":"h_score",#サイズの因子
-		#"size_attr":"in_degree",#サイズの因子
+		#"weight_attr":{"type":"h_score","min":1,"max":3},
+		"size_attr":{"type":"h_score","min":1000,"max":5000},
+		#"size_attr":2000,
 		"cmap":"jet",#色の対応付け方法(カラーバー)
 
 		"lumine":200,#lchを用いる場合の輝度
