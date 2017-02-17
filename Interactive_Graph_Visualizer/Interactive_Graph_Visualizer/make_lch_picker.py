@@ -86,8 +86,11 @@ def draw_colorbar(ax,range_x=[0,1],resolution=50,lumine=255,color_map="lch"):
 			lch=np.array((lumine,c_flt,theta),np.float32)
 			color=LDA_PCA.cvtLCH_to_HTML(lch)
 			plt.axvspan(x,x+diff_x,facecolor=color,alpha=1,edgecolor=color)
-	elif color_map=="jet":
-		cmap=cm.jet
+	elif color_map=="jet" or color_map=="jet_r":
+		if color_map=="jet":
+			cmap=cm.jet
+		else:
+			cmap=cm.jet_r
 		thetas = np.linspace(0, 1, resolution)  
 		pre_x=0
 		for x,theta in zip(xs,thetas):
@@ -121,12 +124,12 @@ def draw_color_hist(h_values,resolution=50,lumine=255,color_map="lch"):
 	plt.figure(current_figre.number)#pyplotの出力を関数に入る前のものに戻す
 
 if __name__=="__main__":
-	#fig=plt.figure()
-	#ax = fig.add_subplot(111,axisbg='Azure') # add subplot background colour
+	fig=plt.figure()
+	ax = fig.add_subplot(111,axisbg='Azure') # add subplot background colour
 	#h_values= np.linspace(0.01, np.pi, 10)  
 	h_values= np.random.rand(5000)*np.pi
 	#draw_half(h_values)
-	#draw_colorbar(ax)
-	draw_color_hist(h_values)
+	draw_colorbar(ax,resolution=100,color_map="jet_r")
+	#draw_color_hist(h_values)
 	#main()
 	plt.show()

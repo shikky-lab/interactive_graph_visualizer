@@ -3,20 +3,28 @@
 
 import os
 import cPickle as pickle
-import csv
+#import csv
 import json
 import xlsxwriter
 import numpy as np
 import glob
 from LDA_kai import LDA
+from sklearn import decomposition
+import matplotlib.cm as cm
+import LDA_PCA
 
 """
-収集したデータをエクセルで分析するためにcsv出力
+収集したデータをエクセルで分析するためにxlsxwriterを使ってxlsx出力
 基本的にjsonのデータを出力するが，LDAで推定した代表トピックも出力する．
 トピックの上位単語も解析したいので別シートにトピックごとの単語を出力
-
-xlsxwriterを使ってxlsx化＆画像の埋め込み
+PCAで着色した結果とも比較するため，PCA後の値とその色も出力
 """
+def cvtRGBAflt2HTML(rgba):
+	if isinstance(rgba, tuple):
+		rgba=np.array(rgba)
+	rgb=rgba[:3]
+	rgb_uint=(rgb*255).astype(np.uint8)
+	return LDA_PCA.cvtRGB_to_HTML(rgb_uint)
 
 col_conv="ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 def convert_to_excelpos(row,col):
@@ -36,6 +44,14 @@ def	create_file_analize_sheet(book,src_pages_dir,exp_dir,lda,tgt_params,pie_dir=
 		tgt_params.append("hub_score")
 		with open(os.path.join(root_dir,G_path)) as fi:
 			G=pickle.load(fi)
+
+	if "pca" in tgt_params:
+		theta=lda.theta()[:len(lda.docs)]
+		pca=decomposition.PCA(1)
+		pca.fit(theta)
+		theta_pca=pca.transform(theta)
+		reg_theta_pca=(theta_pca-theta_pca.min())/(theta_pca.max()-theta_pca.min())#0~1に正規化
+		cmap=cm.jet_r
 
 	"""1行目（項目名)の追加"""
 	for i,param in enumerate(tgt_params):
@@ -61,6 +77,7 @@ def	create_file_analize_sheet(book,src_pages_dir,exp_dir,lda,tgt_params,pie_dir=
 		#	in_domain_titles[domain]=set()
 		for i,param in enumerate(tgt_params):
 			val=0
+			c_format=None
 			if param=="id":
 				val=id
 			elif param=="name_id":
@@ -91,9 +108,15 @@ def	create_file_analize_sheet(book,src_pages_dir,exp_dir,lda,tgt_params,pie_dir=
 			elif param=="pie":
 				sheet.insert_image(tgt_row,i,os.path.join(pie_dir,unicode(lda.file_id_dict[id])+".png"))
 				continue
+			elif param=="pca":
+				val=float(reg_theta_pca[id])
+				c_format=book.add_format()
+				#c_format.set_pattern(1)
+				c_format.set_bg_color(cvtRGBAflt2HTML(cmap(val)))
+				
 			else:
 				val=node.get(param)
-			sheet.write(tgt_row,i,val)
+			sheet.write(tgt_row,i,val,c_format)
 
 		if draw_topics_flag==True:
 			for i in range(lda.K):
@@ -102,24 +125,32 @@ def	create_file_analize_sheet(book,src_pages_dir,exp_dir,lda,tgt_params,pie_dir=
 										               'type': 'column',
 										               'style': 12})
 
-def create_topic_words(book,lda,top_n=20):
+def create_topic_words(book,lda,top_n=20,word_only=False):
 	sheet=book.add_worksheet("topics")
 
 	step=2
 	c_format=book.add_format({"right":True})
 
 	phi = lda.phi()
-	for k in xrange(lda.K):
-		word_col=k*step
-		prob_col=word_col+1
 
-		sheet.write(0,word_col,"Topic"+unicode(k+1))
-		sheet.write(0,prob_col,"",c_format)
-		for i,w in enumerate(np.argsort(-phi[k])[:top_n],start=1):
-			sheet.write(i,word_col,unicode(lda.vocas[w]))
-			sheet.write(i,prob_col,phi[k,w],c_format)
+	if word_only==True:
+		for k in xrange(lda.K):
+			word_col=k
+			sheet.write(0,word_col,"Topic"+unicode(k+1),c_format)
+			for i,w in enumerate(np.argsort(-phi[k])[:top_n],start=1):
+				sheet.write(i,word_col,unicode(lda.vocas[w]),c_format)
+	else:
+		for k in xrange(lda.K):
+			word_col=k*step
+			prob_col=word_col+1
 
-def main(root_dir,expname,tgt_params,G_name=None):
+			sheet.write(0,word_col,"Topic"+unicode(k+1))
+			sheet.write(0,prob_col,"",c_format)
+			for i,w in enumerate(np.argsort(-phi[k])[:top_n],start=1):
+				sheet.write(i,word_col,unicode(lda.vocas[w]))
+				sheet.write(i,prob_col,phi[k,w],c_format)
+
+def main(root_dir,expname,tgt_params,G_name=None,**kwargs):
 	"""関連フォルダの存在確認"""
 	if not os.path.exists(root_dir):
 		print "root_dir",root_dir,"is not exist"
@@ -147,14 +178,17 @@ def main(root_dir,expname,tgt_params,G_name=None):
 			print "G",G_path,"is not exist"
 			exit()
 
+	save_name=kwargs.get("save_name","collection_datas.xlsx")
+	top_n=kwargs.get("top_n",20)
+
 	"""ファイルの読み込み"""
 	with open(os.path.join(exp_dir,"instance.pkl")) as fi:
 	   lda=pickle.load(fi)
 
 	##book=xlwt.Workbook()
-	book=xlsxwriter.Workbook(os.path.join(exp_dir,"collection_datas.xlsx"))
+	book=xlsxwriter.Workbook(os.path.join(exp_dir,save_name))
 	create_file_analize_sheet(book,src_pages_dir,exp_dir,lda,tgt_params,pie_dir=pie_dir,G_path=G_path)
-	create_topic_words(book,lda,top_n=20)
+	create_topic_words(book,lda,top_n=top_n,word_only=True)
 	book.close()
 
 def suffix_generator(target=None,is_largest=False):
@@ -166,7 +200,7 @@ def suffix_generator(target=None,is_largest=False):
 	return suffix
 
 if __name__=="__main__":
-	search_word=u"千葉大学"
+	search_word=u"iPhone"
 	max_page=400
 	#root_dir=ur"C:/Users/fukunaga/Desktop/collect_urls/search_"+search_word+unicode(max_page)
 	#root_dir=ur"C:/Users/fukunaga/Desktop/collect_urls/search_"+search_word+"_append2_"+unicode(max_page)
@@ -185,6 +219,7 @@ if __name__=="__main__":
 		"len_childs",
 		"repTopic",
 		"hits",
-		"topics"]
+		"topics",
+		"pca"]
 
-	main(root_dir=root_dir,expname=expname,tgt_params=tgt_params)
+	main(root_dir=root_dir,expname=expname,tgt_params=tgt_params,save_name="temp.xlsx",top_n=20)

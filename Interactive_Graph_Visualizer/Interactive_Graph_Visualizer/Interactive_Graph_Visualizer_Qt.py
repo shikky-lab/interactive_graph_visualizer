@@ -123,22 +123,27 @@ def key_press_factory(ax,qwidget):
 		if event.key == 's':
 			fig.savefig("graph_figure.png")
 		if event.key == 'v':#switch adjacents transparency
-			cur_xlim = ax.get_xlim()
-			cur_ylim = ax.get_ylim()
-			ax.clear()
 			if flag_dict.get("v",True):
 				sel_node=global_datas.get("cur_select_node")
-				stable_scale_draw(ax,my_graph_drawer.transparent_adjacents,G,sel_node,link_type="both")
+				node_collection=stable_scale_draw(ax,my_graph_drawer.transparent_adjacents,G,sel_node,link_type="both")
 				flag_dict["v"]=False
 			else:
-				stable_scale_draw(ax,my_graph_drawer.graph_redraw,G)
+				node_collection=stable_scale_draw(ax,my_graph_drawer.graph_redraw,G)
 				flag_dict["v"]=True
-			ax.set_xlim(cur_xlim)
-			ax.set_ylim(cur_ylim)
+			plot_datas["node_collection"]=node_collection
+		if event.key == 'r':#recursive node view
+			if flag_dict.get("r",True):
+				sel_node=global_datas.get("cur_select_node")
+				node_collection=stable_scale_draw(ax,my_graph_drawer.node_crawler,G,tgt_node=sel_node,max_cnt=3,link_type="in")
+				flag_dict["r"]=False
+			else:
+				node_collection=stable_scale_draw(ax,my_graph_drawer.graph_redraw,G)
+				flag_dict["r"]=True
+			plot_datas["node_collection"]=node_collection
 
-		if event.key == 'D':#redraw all nodes
-			ax.clear()
-			stable_scale_draw(ax,my_graph_drawer.graph_redraw,G)
+		#if event.key == 'D':#redraw all nodes
+		#	ax.clear()
+		#	stable_scale_draw(ax,my_graph_drawer.graph_redraw,G)
 		fig.canvas.draw()
 
 	fig = ax.get_figure() # get the figure of interest
@@ -207,7 +212,6 @@ class ForceGraph():
 			self.vervoseWidget.change_content(self.G.node.keys()[i])
 			global_datas["cur_select_node"]=self.G.node.keys()[i]
 			break
-
 
 class VerboseWidget(QtGui.QWidget):
 	def __init__(self,*args,**kwargs):
@@ -323,10 +327,11 @@ def stable_scale_draw(ax,draw_func,*args,**kwargs):
 	cur_xlim = ax.get_xlim()
 	cur_ylim = ax.get_ylim()
 	ax.clear()
-	draw_func(*args,**kwargs)
+	node_collection= draw_func(*args,**kwargs)
 	ax.get_figure().canvas.draw()
 	ax.set_xlim(cur_xlim)
 	ax.set_ylim(cur_ylim)
+	return node_collection
 
 class SettingWidget(QtGui.QWidget):
 	def __init__(self,*setting_args,**kwargs):
@@ -469,7 +474,10 @@ def main(args):
 	params["draw_option"]={
 		#"weight_type":[],
 		"weight_type":["ATTR","REPUL"],
-		#"weight_type":["ATTR","REPUL","HITS"],#オーソリティかハブかはsize_attrで指定
+		#"weight_type":["ATTR","REPUL","BHITS"],#オーソリティかハブかはsize_attrで指定
+		#"weight_type":["HITS"],#オーソリティかハブかはsize_attrで指定
+
+		"pos_rand_path":"nest1.rand",#初期配置の乱数を格納．未指定の場合は毎回乱数生成
 
 		"node_type":"COMP1",#ノード色の決定方法．
 		#REPR:代表トピックで着色
@@ -479,10 +487,9 @@ def main(args):
 
 		"do_rescale":True,#リスケールの有無
 		"with_label":False,#ラベルの付与の有無
-		#"size_attr":"a_score",#サイズの因子
+		#"size_attr":"a_score",#サイズの因子,size_attr未指定ならデフォルト値2000で指定される
 		#"size_attr":"h_score",#サイズの因子
 		#"size_attr":"in_degree",#サイズの因子
-		"size_attr":2000,
 		"cmap":"jet",#色の対応付け方法(カラーバー)
 
 		"lumine":200,#lchを用いる場合の輝度

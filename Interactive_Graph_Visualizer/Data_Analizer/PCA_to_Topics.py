@@ -5,15 +5,10 @@ import os
 import os.path
 import cPickle as pickle
 import matplotlib.pyplot as plt
-import matplotlib
 import matplotlib.cm as cm
 from LDA_kai import LDA
-from math import modf#整数と小数の分離
 #import matplotlib.font_manager
-import color_changer
 import LDA_PCA
-import make_lch_picker
-import cv2
 from sklearn import decomposition
 import xlsxwriter
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -38,19 +33,24 @@ def circler_color_deconverter(values,start_angle):
 	values=values/(2*np.pi)
 	return values
 
-def calc_composite_thetas(lda,pca,theta_pca,output=False):
+def calc_composite_thetas(lda,pca,theta_pca,resolution=10,output=False):
 	#steps = np.linspace(0, 1, 50)  
-	steps = np.linspace(theta_pca.min(), theta_pca.max(), 10)  
+	steps = np.linspace(theta_pca.min(), theta_pca.max(), resolution)  
 	#theta=lda.theta()[:len(lda.docs)]
+
+	#molecs=pca.inverse_transform(theta_pca)-pca.inverse_transform(theta_pca).min(axis=1)[np.newaxis].T+lda.alpha
+	#rev_theta=molecs/molecs.sum(axis=1)[np.newaxis].T
 
 	"""
 	主成分分析結果から元のトピック分布を再計算
 	理論的には範囲内に収まるはずだが，なぜか負の値を持つことがあるため0~1に収まるように正規化
 	"""
-	#molecs=pca.inverse_transform(theta_pca)-pca.inverse_transform(theta_pca).min(axis=1)[np.newaxis].T+lda.alpha
-	#rev_theta=molecs/molecs.sum(axis=1)[np.newaxis].T
+	#molecs=pca.inverse_transform(steps[np.newaxis].T)-pca.inverse_transform(steps[np.newaxis].T).min(axis=1)[np.newaxis].T+lda.alpha
 
-	molecs=pca.inverse_transform(steps[np.newaxis].T)-pca.inverse_transform(steps[np.newaxis].T).min(axis=1)[np.newaxis].T+lda.alpha
+	"""負の数を0にするパターン"""
+	molecs=pca.inverse_transform(steps[np.newaxis].T)
+	molecs=np.where(molecs>0,molecs,0)
+
 	rev_thetas=molecs/molecs.sum(axis=1)[np.newaxis].T
 
 	if output==True:
@@ -62,17 +62,8 @@ def calc_composite_thetas(lda,pca,theta_pca,output=False):
 
 	return rev_thetas
 
-
-def output_worddist_lda(lda,word_dists,dir_path="."):
-	book=xlsxwriter.Workbook(os.path.join(dir_path,"words.xlsx"))
-	sheet=book.add_worksheet("words")
-	for col,word_dist in enumerate(word_dists):
-		#col*=2
-		for row,word_id in enumerate(np.argsort(-word_dist)[:20]):
-			str_word=lda.vocas[word_id]#.decode("utf8")#.encode("sjis")
-			sheet.write(row,col,str_word)
-			#sheet.write(row,col+1,word_dist[word_id])
-	book.close()
+def output_worddist_lda(lda,word_dists,dir_path=".",topn=20):
+	output_topn(lda.vocas,word_dists,dir_path=dir_path,topn=topn)
 
 def cvtRGBAflt2HTML(rgba):
 	if isinstance(rgba, tuple):
@@ -81,8 +72,7 @@ def cvtRGBAflt2HTML(rgba):
 	rgb_uint=(rgb*255).astype(np.uint8)
 	return LDA_PCA.cvtRGB_to_HTML(rgb_uint)
 
-def output_worddist_tfidf(lda,word_dists,dir_path="."):
-	c_map=cm.jet_r#環境によってPCAの値が反転する？ため，カラーマップを反転させて対応
+def output_worddist_tfidf(lda,word_dists,dir_path=".",topn=20):
 	uni_docs=[]
 	for word_dist in word_dists:
 		uni_words=u""
@@ -96,9 +86,9 @@ def output_worddist_tfidf(lda,word_dists,dir_path="."):
 	features=tfidf.transform(uni_docs).toarray()
 	terms=tfidf.get_feature_names()
 
-	output_topn(terms,features,dir_path=dir_path,topn=20)
+	output_topn(terms,features,dir_path=dir_path,topn=topn)
 
-def output_worddist_lda_tfidf(lda,word_dists,dir_path="."):
+def output_worddist_lda_tfidf(lda,word_dists,dir_path=".",topn=20):
 	uni_docs=[]
 	org_word_to_plb_list=[]#ユニコード単語をキーに確率を引く辞書のリスト．後で復元する際に使う．
 	for word_dist in word_dists:
@@ -122,7 +112,7 @@ def output_worddist_lda_tfidf(lda,word_dists,dir_path="."):
 				continue
 			feature[i]=feature[i]*org_word_to_plb_[term]
 
-	output_topn(terms,features,dir_path=dir_path,topn=20)
+	output_topn(terms,features,dir_path=dir_path,topn=topn)
 
 def output_topn(terms,features,dir_path=".",topn=20):
 	c_map=cm.jet_r#環境によってPCAの値が反転する？ため，カラーマップを反転させて対応
@@ -143,9 +133,9 @@ def output_topn(terms,features,dir_path=".",topn=20):
 			if col==(len(features)-1):
 				flag_cnt+=1
 			else:
-				nx_rank=np.argsort(-features[col+1])[:100]
-				nx_rank=np.where(nx_rank==word_id)[0]
-				if len(nx_rank) == 0 or nx_rank[0]>row:
+				nxt_rank=np.argsort(-features[col+1])[:100]
+				nxt_rank=np.where(nxt_rank==word_id)[0]
+				if len(nxt_rank) == 0 or nxt_rank[0]>row:
 					flag_cnt+=1
 					
 			str_word=terms[word_id].encode("utf8")
@@ -159,7 +149,9 @@ def output_topn(terms,features,dir_path=".",topn=20):
 		sheet.write(row+1,col,"",c_format)
 	book.close()
 
-def calc_composite_worddist(lda,comp_type="COMP1",lumine=255,cmap="lch"):
+def calc_composite_worddist(lda,comp_type="COMP1",lumine=255,cmap="lch",output_option={}):
+	calc_method=output_option.get("calc_method",output_worddist_lda)
+	topn=output_option.get("topn",50)
 	"""thetaの方を主成分分析で1次元にして彩色"""
 	theta=lda.theta()[:len(lda.docs)]
 
@@ -170,12 +162,11 @@ def calc_composite_worddist(lda,comp_type="COMP1",lumine=255,cmap="lch"):
 
 	#reg_theta_pca=(theta_pca-theta_pca.min())/(theta_pca.max()-theta_pca.min())#0~1に正規化
 	
-	rev_thetas=calc_composite_thetas(lda,pca,theta_pca,output=True)
-	exit()
+	resolution=10
+	rev_thetas=calc_composite_thetas(lda,pca,theta_pca,resolution=resolution,output=True)
 	word_dists=rev_thetas.dot(lda.phi())
-	#output_worddist_lda(lda,word_dists)
-	#output_worddist_tfidf(lda,word_dists)
-	output_worddist_lda_tfidf(lda,word_dists)
+
+	calc_method(lda,word_dists,topn=topn)
 
 def main(params):
 	root_dir=params.get("root_dir")
@@ -187,13 +178,13 @@ def main(params):
 	lumine=draw_option.get("lumine")
 	cmap=draw_option.get("cmap")
 	comp_type=draw_option.get("comp_type")
+	output_option=params.get("output_option")
 
 	exp_dir=os.path.join(root_dir,exp_name)
 	with open(os.path.join(exp_dir,"instance.pkl")) as fi:
 	   lda=pickle.load(fi)
 
-	calc_composite_worddist(lda,comp_type,lumine=lumine,cmap=cmap)
-
+	calc_composite_worddist(lda,comp_type,lumine=lumine,cmap=cmap,output_option=output_option)
 
 def suffix_generator(target=None,is_largest=False):
 	suffix=""
@@ -237,6 +228,13 @@ if __name__ == "__main__":
 		#"color_map_by":None
 		}
 	params["draw_option"]=draw_option
+
+	"""ここからが出力する分布に関する設定"""
+	output_option={
+		"calc_method":output_worddist_lda,
+		"topn":500
+		}
+	params["output_option"]=output_option
 
 	main(params)
 	plt.show()

@@ -115,7 +115,7 @@ def suffix_generator(target=None,is_largest=False):
 
 if __name__=="__main__":
 	params={}
-	params["search_word"]=u"千葉大学"
+	params["search_word"]=u"iPhone"
 	params["max_page"]=400
 	params["K"]=10
 	params["root_dir"]=ur"C:/Users/fukunaga/Desktop/collect_urls/search_"+params["search_word"]+"_"+unicode(params["max_page"])+"_add_childs"
@@ -125,6 +125,6 @@ if __name__=="__main__":
 	params["comp_func_name"]="comp4_2"
 	params["nx_dir"]=os.path.join(os.path.join(params["root_dir"],params["exp_name"]),"nx_datas")
 	params["src_pkl_name"]="G_with_params_"+params["comp_func_name"]+".gpkl"
-	params["target_node"]=82
+	params["target_node"]=101
 
 	main(params)

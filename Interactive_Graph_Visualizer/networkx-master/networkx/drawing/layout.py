@@ -272,7 +272,7 @@ def fruchterman_reingold_layout(G, k=None,
 		Dimension of layout
 
 	all_node_weights:array
-		全ノード間に対して計算された重み(距離)．斥力計算に利用
+		全ノード間に対して計算された重み(距離)．斥力計算に利用．未指定ならnp.array(1)を代入
 
 	Returns
 	-------
@@ -294,6 +294,9 @@ def fruchterman_reingold_layout(G, k=None,
 	if fixed is not None:
 		nfixed = dict(zip(G, range(len(G))))
 		fixed = np.asarray([nfixed[v] for v in fixed])
+
+	if all_node_weights is None:
+		all_node_weights=np.array(1)
 
 	if pos is not None:
 		# Determine size of existing domain to adjust initial positions
@@ -325,18 +328,17 @@ def fruchterman_reingold_layout(G, k=None,
 										   iterations, dim)
 	except:
 		A = nx.to_numpy_matrix(G, weight=weight)
+		hits_scores=None
+		if "HITS" in weight_type:
+			hits_scores=np.array(revised_hits_scores.values())
 		if k is None and fixed is not None:
 			# We must adjust k by domain size for layouts not near 1x1
 			nnodes, _ = A.shape
 			k = dom_size / np.sqrt(nnodes)
-		if all_node_weights is None:
+
+		if all_node_weights is None and "HITS" not in weight_type:
 			pos = _fruchterman_reingold(A, k, pos_arr, fixed, iterations, dim)
 		else:
-			if "HITS" in weight_type:
-				#hits_scores=np.array([G.node[i]["a_score"] for i in G.node])
-				hits_scores=np.array(revised_hits_scores.values())
-			else:
-			    hits_scores=None
 			pos = _fruchterman_reingold_revised(A, all_node_weights, k, pos_arr, fixed, iterations, dim,hits_scores=hits_scores)
 	if fixed is None and rescale is True:
 		pos = rescale_layout(pos, scale=scale) + center

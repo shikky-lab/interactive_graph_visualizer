@@ -47,14 +47,20 @@ def reserve_nodes(G,param,value):
 
 """pathの位置に乱数があればそれを，無ければ新たに作る"""
 def pos_initializer(G,path):
-	if os.path.exists(path):
+	try:
 		with open(path) as fi:
 			pos=pickle.load(fi)
 		return pos
+	except:
+		path=""
 	
 	pos=dict()
 	for a, d in G.nodes(data=True):
 		pos[a]=np.random.rand(2)
+
+	if path=="":
+		return pos
+
 	with open(path,"w") as fo:
 		pickle.dump(pos,fo)
 	return pos
@@ -187,12 +193,12 @@ def draw_node_with_lch(G,pos,**kwargs):
 
 	if color_map_by=="phi":
 		color_map=get_color_map_phi(G,pos,lda,comp_type,lumine=lumine)
-		node_color=color_map.values()
 	elif color_map_by=="theta":
 		color_map=get_color_map_theta(G,pos,lda,comp_type,lumine=lumine,cmap=cmap)
-		node_color=color_map.values()
 	elif color_map_by==None:
-		node_color=["#FFFFFF"]*len(G.node)
+		color_map=dict.fromkeys(G,"#FFFFFF")
+
+	node_color=color_map.values()
 	size_array=size.values()
 	node_collection=nx.draw_networkx_nodes(G,pos=pos,node_color=node_color,node_size=size_array,ax=ax,pick_func=pick_func)
 	return node_collection,color_map
@@ -258,7 +264,7 @@ def save_drawoption(param_dict,path):
 HITSのパラメータに応じてノードのサイズを決定
 @ret:{ノード番号:size}の辞書
 """
-def calc_nodesize(G,attr="a_score",min_size=1000,max_size=5000):
+def calc_nodesize(G,attr="a_score",weight_key="weight",min_size=1000,max_size=5000,use_bhits=True):
 	if type(attr)!=str and type(attr)!=unicode:
 		normal_size=max_size-min_size
 		normal_size=attr
@@ -267,7 +273,10 @@ def calc_nodesize(G,attr="a_score",min_size=1000,max_size=5000):
 
 	if attr=="a_score" or attr=="h_score":
 		#a_scores,h_scores=nx.hits(G)#引数の順番違い．HCG論文提出時にこっちで出してしまっていた．．．
-		h_scores,a_scores=nx.hits(G)
+		if use_bhits is True:
+			h_scores,a_scores=nx.bhits(G,weight_key=weight_key)
+		else:
+			h_scores,a_scores=nx.hits(G,weight_key=weight_key)
 		if attr=="a_score":
 			use_vals=a_scores
 		elif attr=="h_score":
@@ -289,6 +298,20 @@ def calc_nodesize(G,attr="a_score",min_size=1000,max_size=5000):
 		size_dict[node_no]=size
 	return size_dict
 
+"""
+urlからドメイン部分を抽出して返す．
+FQDNのドットで区切られたブロック数が3以下の場合，ドメイン名はFQDN自身
+4以上の場合，下3ブロックをドメインとして返す．
+@arg
+[IN]url:ドメインを取得したいURL
+@ret
+(unicode) domain
+"""
+def domain_detect(url):
+	FQDN=url.split("/")[2]
+	FQDN_list=FQDN.split(".")
+	return u".".join(FQDN_list[-3:])#開始点がリスト長より長くても問題なく無く動く
+
 pos=0
 def main(_params):
 	global draw_kwargs
@@ -302,6 +325,7 @@ def main(_params):
 	src_pkl_name=params.get("src_pkl_name")
 	weights_pkl_name=params.get("weights_pkl_name")
 	draw_option=params.get("draw_option")
+	pos_rand_path=draw_option.get("pos_rand_path","")
 
 	"""関連フォルダの存在確認"""
 	if not os.path.exists(root_dir):
@@ -328,7 +352,7 @@ def main(_params):
 	"""パラメータの読み込み"""
 	weight_type=draw_option.get("weight_type",["ATTR","REPUL"])
 	do_rescale=draw_option.get("do_rescale",True)
-	size_attr=draw_option.get("size_attr","None")
+	size_attr=draw_option.get("size_attr",2000)
 	save_drawoption(draw_option,os.path.join(nx_dir,"draw_option.txt"))
 
 	"""グラフの構築・描画"""
@@ -336,20 +360,28 @@ def main(_params):
 	if G.is_directed():
 		G_undirected=G.to_undirected()
 		
-	revised_hits_scores=calc_nodesize(G,attr=size_attr,min_size=1,max_size=3)#引力斥力計算用に正規化したhitsスコア.calc_nodesizeを共用
+	if "BHITS" in weight_type:
+		use_bhits=True
+		weight_type[weight_type.index("BHITS")]="HITS"
+	else:
+		use_bhits=False
+	revised_hits_scores=calc_nodesize(G,attr=size_attr,min_size=1,max_size=3,use_bhits=use_bhits,weight_key="no_weight")#引力斥力計算用に正規化したhitsスコア.calc_nodesizeを共用
 
-	initial_pos=pos_initializer(G_undirected,os.path.join(root_dir,"nest1.rand"))
+	"""初期値の代入"""
+	initial_pos=pos_initializer(G_undirected,os.path.join(root_dir,pos_rand_path))
 	pos=initial_pos
 
-	if "ATTR" in weight_type:
-		if "REPUL" in weight_type:
-			pos=nx.spring_layout(G_undirected,pos=pos,all_node_weights=all_nodes_weights,rescale=do_rescale,weight_type=weight_type,revised_hits_scores=revised_hits_scores)#描画位置はここで確定,両方の重みをかける
-		else:
-			pos=nx.spring_layout(G_undirected,pos=initial_pos,all_node_weights=np.ones(1))#描画位置はここで確定,全ノードの重みを1にするので重みがかかるのは引力計算のみ
-	elif "REPUL" in weight_type:
-		pos=nx.spring_layout(G_undirected,pos=initial_pos,all_node_weights=all_nodes_weights,weight="wei")#描画位置はここで確定,重みがかかるのは斥力計算のみ
-	else:
-		pos=nx.spring_layout(G_undirected,pos=initial_pos,weight="wei")#描画位置はここで確定
+	"""配置に使うパラメータの設定"""
+	if "ATTR" not in weight_type:
+		all_nodes_weights = None
+	weight_label="weight" 
+	if "REPUL" not in weight_type :
+		weight_label="nowehgiht"#各エッジの重みは"weight"キーに入っているため，これ以外を指定すると重みなしとなる．
+	if "HITS" not in  weight_type:
+		revised_hits_scores=None
+
+	"""配置の計算"""
+	pos=nx.spring_layout(G_undirected,pos=pos,all_node_weights=all_nodes_weights,weight=weight_label,rescale=do_rescale,weight_type=weight_type,revised_hits_scores=revised_hits_scores)#描画位置はここで確定,両方の重みをかける
 		
 	"""実際の描画処理"""
 	size_dict=calc_nodesize(G,attr=size_attr,min_size=1000,max_size=3000)
@@ -383,7 +415,7 @@ def graph_redraw(G,_pos=None,_color_map=None,**kwargs):
 	draw_option=draw_kwargs.get("draw_option")
 	ax=draw_option.get("ax")
 	pick_func=draw_option.get("pick_func")
-	widths=kwargs.get("widths")
+	#widths=kwargs.get("widths")
 	if _pos==None:
 		_pos=pos
 	if _color_map == None:
@@ -419,6 +451,7 @@ def collect_adjacents(G,node_no,link_type):
 
 	return set(ret_list),edges
 
+
 """
 change adjacents color to white and hide edges
 @arg
@@ -447,7 +480,8 @@ def transparent_adjacents(G,sel_node,link_type,_pos=None,_color_map=None,**kwarg
 			#new_color_map[k]=v.replace("#","#80")
 	new_color_map[sel_node]=color_map[sel_node]
 	
-	graph_redraw(G,_color_map=new_color_map,edgelist=edgelist)
+	node_collection=graph_redraw(G,_color_map=new_color_map,edgelist=edgelist)
+	return node_collection
 
 """
 draw only nodes within the specified color range
@@ -481,7 +515,51 @@ def cut_off_colors(G,lower,higher,**kwargs):
 			edgelist.extend([edge for edge in G.edges(k)])
 		else:
 			new_color_map[k]=u"#FFFFFF"
-	graph_redraw(G,_color_map=new_color_map,edgelist=edgelist)
+
+	node_collection=graph_redraw(G,_color_map=new_color_map,edgelist=edgelist)
+	return node_collection
+
+def recursive_node_crawl(G,tgt_node,link_type,max_cnt,nodes,searched,edges):
+	max_cnt-=1
+	if max_cnt<0:#マイナスになったら終了
+		return 0
+
+	adjacents,edgelist=collect_adjacents(G,tgt_node,link_type)
+	edgeset=set(edgelist)
+	searched.add(tgt_node)
+	for node in adjacents:
+		if node in searched:
+			continue
+		recursive_node_crawl(G,node,link_type,max_cnt,nodes,searched,edges)
+	nodes.update(adjacents)
+	edges.update(edgeset)
+
+"""
+対象ノードについて，そのエッジを連鎖的にたどって関わるノードとエッジを全て取得する．
+"""
+def node_crawler(G,**kwargs):
+	global draw_kwargs
+	draw_option=draw_kwargs.get("draw_option")
+	color_map=draw_option.get("used_color_map")
+	link_type=kwargs.get("link_type")
+	max_cnt=kwargs.get("max_cnt")
+	tgt_node=kwargs.get("tgt_node")
+	nodes=set()
+	searched=set()
+	edges=set()
+	recursive_node_crawl(G,tgt_node,link_type,max_cnt=max_cnt,nodes=nodes,searched=searched,edges=edges)
+	new_color_map={}
+	"""該当ノードに対する処理"""
+	for k,v in color_map.items():
+		if k in nodes:
+			new_color_map[k]=color_map[k]
+		else:
+			new_color_map[k]=u"#FFFFFF"
+	new_color_map[tgt_node]=color_map[tgt_node]
+	
+	node_collection=graph_redraw(G,_color_map=new_color_map,edgelist=edges)
+	return node_collection
+
 
 def suffix_generator(target=None,is_largest=False):
 	suffix=""

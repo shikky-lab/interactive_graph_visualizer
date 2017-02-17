@@ -28,6 +28,10 @@
       <SubType>
       </SubType>
     </Compile>
+    <Compile Include="arrange_G_data.py">
+      <SubType>
+      </SubType>
+    </Compile>
     <Compile Include="clollection_analizer2.py" />
     <Compile Include="PCA_to_Topics.py" />
     <Compile Include="tooltip_test.py">
