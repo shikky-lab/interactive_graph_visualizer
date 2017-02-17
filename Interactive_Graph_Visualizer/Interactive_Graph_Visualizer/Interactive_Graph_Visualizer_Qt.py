@@ -125,21 +125,19 @@ def key_press_factory(ax,qwidget):
 		if event.key == 'v':#switch adjacents transparency
 			if flag_dict.get("v",True):
 				sel_node=global_datas.get("cur_select_node")
-				node_collection=stable_scale_draw(ax,my_graph_drawer.transparent_adjacents,G,sel_node,link_type="both")
+				stable_scale_draw(ax,my_graph_drawer.transparent_adjacents,G,sel_node,link_type="both")
 				flag_dict["v"]=False
 			else:
-				node_collection=stable_scale_draw(ax,my_graph_drawer.graph_redraw,G)
+				stable_scale_draw(ax,my_graph_drawer.graph_redraw,G)
 				flag_dict["v"]=True
-			plot_datas["node_collection"]=node_collection
 		if event.key == 'r':#recursive node view
 			if flag_dict.get("r",True):
 				sel_node=global_datas.get("cur_select_node")
-				node_collection=stable_scale_draw(ax,my_graph_drawer.node_crawler,G,tgt_node=sel_node,max_cnt=3,link_type="in")
+				stable_scale_draw(ax,my_graph_drawer.node_crawler,G,tgt_node=sel_node,max_cnt=3,link_type="in")
 				flag_dict["r"]=False
 			else:
-				node_collection=stable_scale_draw(ax,my_graph_drawer.graph_redraw,G)
+				stable_scale_draw(ax,my_graph_drawer.graph_redraw,G)
 				flag_dict["r"]=True
-			plot_datas["node_collection"]=node_collection
 
 		#if event.key == 'D':#redraw all nodes
 		#	ax.clear()
@@ -324,6 +322,8 @@ class TopicGraph():
 		self.canvas.draw()
 
 def stable_scale_draw(ax,draw_func,*args,**kwargs):
+	global plot_datas
+	sizes=plot_datas["node_collection"].get_sizes()
 	cur_xlim = ax.get_xlim()
 	cur_ylim = ax.get_ylim()
 	ax.clear()
@@ -331,7 +331,8 @@ def stable_scale_draw(ax,draw_func,*args,**kwargs):
 	ax.get_figure().canvas.draw()
 	ax.set_xlim(cur_xlim)
 	ax.set_ylim(cur_ylim)
-	return node_collection
+	plot_datas["node_collection"]=node_collection
+	plot_datas["node_collection"].set_sizes(sizes)
 
 class SettingWidget(QtGui.QWidget):
 	def __init__(self,*setting_args,**kwargs):
